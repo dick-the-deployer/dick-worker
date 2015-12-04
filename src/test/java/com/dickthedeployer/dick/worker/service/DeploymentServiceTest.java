@@ -17,13 +17,13 @@ package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.ContextTestBase;
 import com.watchrabbit.commons.marker.Todo;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonMap;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonMap;
+
 /**
- *
  * @author mariusz
  */
 public class DeploymentServiceTest extends ContextTestBase {
@@ -38,7 +38,7 @@ public class DeploymentServiceTest extends ContextTestBase {
         deploymentService.deploy("someId",
                 asList("cmd.exe /c echo %FOO%",
                         "cmd.exe /c echo %FOO%",
-                        "cmd.exe /c ping 127.0.0.1 -n 2 > nul",
+                        "cmd.exe /c ping 127.0.0.1 -n 9 > nul",
                         "cmd.exe /c echo bar"),
                 singletonMap("FOO", "foo"));
 

@@ -18,18 +18,21 @@ package com.dickthedeployer.dick.worker.service;
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
 import com.dickthedeployer.dick.worker.facade.model.DeploymentForm;
 import com.watchrabbit.commons.marker.Todo;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import rx.Observable;
+import rx.Subscription;
+import rx.subscriptions.Subscriptions;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -48,26 +51,25 @@ public class DeploymentService {
     @Value("${dick.worker.report.timespan:1}")
     long timespan;
 
-    @Todo("Synhronous invocaion")
-    public void deploy(String deploymentId, List<String> commands, Map<String, String> environment) {
+    @Todo("Check for status after creating subscribtion and unsubscribe")
+    public Subscription deploy(String deploymentId, List<String> commands, Map<String, String> environment) {
         StringBuffer buffer = new StringBuffer();
         try {
             Path temp = Files.createTempDirectory("deployment-" + deploymentId);
-
-            Observable.just(commands)
-                    .flatMap(Observable::from)
+            return Observable.just(commands)
+                    .concatMap(Observable::from)
                     .map(command -> command.split(" "))
                     .concatMap(commandArray
-                            -> Observable.defer(() -> commandService.invokeWithEnvironment(temp, environment, commandArray))
+                                    -> commandService.invokeWithEnvironment(temp, environment, commandArray)
                     ).buffer(timespan, TimeUnit.SECONDS)
                     .map(logLines -> StringUtils.collectionToDelimitedString(logLines, "\n"))
-                    .doOnNext(logLines -> buffer.append(logLines))
+                    .doOnNext(buffer::append)
                     .subscribe(logLines -> onProgress(deploymentId, logLines),
                             ex -> processError(deploymentId, ex, buffer),
                             () -> completeDeployment(deploymentId, buffer));
-
         } catch (IOException ex) {
             processError(deploymentId, ex, buffer);
+            return Subscriptions.empty();
         }
     }
 
@@ -83,4 +85,5 @@ public class DeploymentService {
     private void completeDeployment(String deploymentId, StringBuffer buffer) {
         dickWebFacade.reportSuccess(deploymentId, new DeploymentForm(buffer.toString()));
     }
+
 }
