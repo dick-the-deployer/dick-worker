@@ -17,7 +17,12 @@ package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
 import com.dickthedeployer.dick.worker.facade.model.DeploymentForm;
-import com.watchrabbit.commons.marker.Todo;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,13 +31,6 @@ import org.springframework.util.StringUtils;
 import rx.Observable;
 import rx.Subscription;
 import rx.subscriptions.Subscriptions;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -51,7 +49,6 @@ public class DeploymentService {
     @Value("${dick.worker.report.timespan:1}")
     long timespan;
 
-    @Todo("Check for status after creating subscribtion and unsubscribe")
     public Subscription deploy(String deploymentId, List<String> commands, Map<String, String> environment) {
         StringBuffer buffer = new StringBuffer();
         try {
@@ -60,8 +57,9 @@ public class DeploymentService {
                     .concatMap(Observable::from)
                     .map(command -> command.split(" "))
                     .concatMap(commandArray
-                                    -> commandService.invokeWithEnvironment(temp, environment, commandArray)
+                            -> commandService.invokeWithEnvironment(temp, environment, commandArray)
                     ).buffer(timespan, TimeUnit.SECONDS)
+                    .filter(logLines -> !logLines.isEmpty())
                     .map(logLines -> StringUtils.collectionToDelimitedString(logLines, "\n"))
                     .doOnNext(buffer::append)
                     .subscribe(logLines -> onProgress(deploymentId, logLines),
@@ -74,6 +72,7 @@ public class DeploymentService {
     }
 
     private void onProgress(String deploymentId, String logLines) {
+        log.debug("Reporting progress on {} with \n {}", deploymentId, logLines);
         dickWebFacade.reportProgress(deploymentId, new DeploymentForm(logLines));
     }
 

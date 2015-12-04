@@ -1,3 +1,5 @@
 dick.web:
   token: foo-bar
   url: http://foo-bar.com
+  
+logging.level.com.dickthedeployer: DEBUG

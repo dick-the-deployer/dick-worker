@@ -55,8 +55,10 @@ public class CommandService {
 
                 try (Scanner s = new Scanner(process.getInputStream())) {
                     while (s.hasNextLine()) {
+                        String nextLine = s.nextLine();
+                        log.debug("Emitting: {}", nextLine);
                         observer.onNext(
-                                s.nextLine()
+                                nextLine
                         );
                     }
                     int result = process.waitFor();
