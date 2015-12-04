@@ -16,6 +16,7 @@
 package com.dickthedeployer.dick.worker;
 
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.RunWith;
 import static org.mockito.Mockito.mock;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -28,6 +29,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  *
  * @author mariusz
  */
+@Slf4j
 @RunWith(SpringJUnit4ClassRunner.class)
 @Configuration
 @WebIntegrationTest
@@ -40,6 +42,7 @@ public class ContextTestBase {
     }
 
     public static boolean isWindows() {
+        log.debug("OS NAME {}", System.getProperty("os.name").toLowerCase());
         return (System.getProperty("os.name").toLowerCase().contains("win"));
     }
 }
