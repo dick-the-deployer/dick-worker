@@ -81,7 +81,7 @@ public class DeploymentServiceTest extends ContextTestBase {
 
     private String produceOutput() {
         if (isWindows()) {
-            return "Executing command: [cmd.exe, /c, echo, %FOO%]\n"
+            return "Executing command: [cmd.exe, /c, echo, $FOO]\n"
                     + "Setting environment variable: FOO=foo\n"
                     + "foo\n"
                     + "Executing command: [cmd.exe, /c, ping, 127.0.0.1, -n, 4, >, nul]\n"
