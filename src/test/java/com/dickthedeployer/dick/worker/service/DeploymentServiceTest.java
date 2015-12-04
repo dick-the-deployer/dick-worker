@@ -73,7 +73,7 @@ public class DeploymentServiceTest extends ContextTestBase {
                     "cmd.exe /c ping 127.0.0.1 -n 4 > nul",
                     "cmd.exe /c echo bar");
         } else {
-            return asList("echo %FOO%",
+            return asList("echo $FOO",
                     "sleep 4",
                     "echo bar");
         }
