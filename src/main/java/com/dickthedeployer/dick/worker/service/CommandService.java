@@ -15,8 +15,16 @@
  */
 package com.dickthedeployer.dick.worker.service;
 
+import com.dickthedeployer.dick.worker.exception.ProcessExitedWithNotZeroException;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Scanner;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import rx.Observable;
+import rx.Subscriber;
 
 /**
  *
@@ -26,38 +34,43 @@ import org.springframework.stereotype.Service;
 @Service
 public class CommandService {
 
-//    public int invoke(Path workingDir, String... command) {
-//        return invokeWithEnvironment(workingDir, emptyMap(), command).getResult();
-//    }
-//    public CommandResult invokeWithEnvironment(Path workingDir, Map<String, String> environment, String... command) throws RuntimeException {
-//        try {
-//            log.info("Executing command {} in path {}", Arrays.toString(command), workingDir.toString());
-//            StringBuilder text = new StringBuilder();
-//            text.append("Executing command ").append(Arrays.toString(command)).append("\n");
-//            ProcessBuilder builder = new ProcessBuilder(command);
-//            builder.directory(workingDir.toFile());
-//            builder.redirectErrorStream(true);
-//            environment.forEach((key, value)
-//                    -> text.append("Setting environment variable: ").append(key).append("=").append(value).append("\n")
-//            );
-//            builder.environment().putAll(environment);
-//            Process process = builder.start();
-//
-//            try (Scanner s = new Scanner(process.getInputStream())) {
-//                while (s.hasNextLine()) {
-//                    text.append(s.nextLine());
-//                    text.append("\n");
-//                }
-//                int result = process.waitFor();
-//                log.info("Process exited with result {} and output {}", result, text);
-//
-//                CommandResult commandResult = new CommandResult();
-//                commandResult.setOutput(text.toString());
-//                commandResult.setResult(result);
-//                return commandResult;
-//            }
-//        } catch (IOException | InterruptedException ex) {
-//            throw Throwables.propagate(ex);
-//        }
-//    }
+    public Observable<String> invokeWithEnvironment(Path workingDir, Map<String, String> environment, String... command) throws RuntimeException {
+        return Observable.create((Subscriber<? super String> observer) -> {
+            try {
+                log.info("Executing command {} in path {}", Arrays.toString(command), workingDir.toString());
+                observer.onNext(
+                        new StringBuilder().append("Executing command: ").append(Arrays.toString(command)).toString()
+                );
+
+                ProcessBuilder builder = new ProcessBuilder(command);
+                builder.directory(workingDir.toFile());
+                builder.redirectErrorStream(true);
+                environment.forEach((key, value)
+                        -> observer.onNext(
+                                new StringBuilder().append("Setting environment variable: ").append(key).append("=").append(value).toString()
+                        )
+                );
+                builder.environment().putAll(environment);
+                Process process = builder.start();
+
+                try (Scanner s = new Scanner(process.getInputStream())) {
+                    while (s.hasNextLine()) {
+                        observer.onNext(
+                                s.nextLine()
+                        );
+                    }
+                    int result = process.waitFor();
+                    log.info("Process exited with result {}", result);
+
+                    if (result != 0) {
+                        observer.onError(new ProcessExitedWithNotZeroException("Exited with not zero on " + Arrays.toString(command)));
+                    }
+                }
+
+                observer.onCompleted();
+            } catch (IOException | InterruptedException e) {
+                observer.onError(e);
+            }
+        });
+    }
 }
