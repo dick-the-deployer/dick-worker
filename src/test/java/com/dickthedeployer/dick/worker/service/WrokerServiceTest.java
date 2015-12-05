@@ -16,32 +16,33 @@
 package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.ContextTestBase;
+import static com.dickthedeployer.dick.worker.ContextTestBase.isWindows;
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
-import com.dickthedeployer.dick.worker.facade.model.DeploymentForm;
+import com.dickthedeployer.dick.worker.facade.model.DeploymentStatus;
 import static com.watchrabbit.commons.sleep.Sleep.sleep;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
+ *
  * @author mariusz
  */
-public class DeploymentServiceTest extends ContextTestBase {
+public class WrokerServiceTest extends ContextTestBase {
 
     @Autowired
-    DeploymentService deploymentService;
+    WorkerService workerService;
 
     @Autowired
     DickWebFacade dickWebFacade;
@@ -52,57 +53,33 @@ public class DeploymentServiceTest extends ContextTestBase {
     }
 
     @Test
-    public void shouldDeploySucessfully() {
-        deploymentService.deploy("someId",
+    public void shouldDeploySucessfullyCheckingIfShouldStop() {
+        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new DeploymentStatus());
+
+        workerService.performDeployment("someId",
                 produceCommands(),
                 singletonMap("FOO", "foo"));
 
-        sleep(6, TimeUnit.SECONDS);
+        sleep(10, TimeUnit.SECONDS);
 
-        ArgumentCaptor<DeploymentForm> captor = ArgumentCaptor.forClass(DeploymentForm.class);
         verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
-        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), captor.capture());
-
-        assertThat(captor.getValue()).isNotNull();
-        if (isWindows()) {
-            assertThat(captor.getValue().getLog()).isEqualTo(
-                    "Executing command: [cmd.exe, /c, echo, %FOO%]\n"
-                    + "Setting environment variable: FOO=foo\n"
-                    + "foo\n"
-                    + "Executing command: [cmd.exe, /c, ping, 127.0.0.1, -n, 4, >, nul]\n"
-                    + "Setting environment variable: FOO=foo\n"
-                    + "Executing command: [cmd.exe, /c, echo, bar]\n"
-                    + "Setting environment variable: FOO=foo\n"
-                    + "bar\n"
-            );
-        }
+        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), any());
+        verify(dickWebFacade, times(2)).checkStatus(eq("someId"));
     }
 
     @Test
-    public void shouldReportError() {
-        deploymentService.deploy("someId",
+    public void shouldReportErrorCheckingIfShouldStop() {
+        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new DeploymentStatus());
+        workerService.performDeployment("someId",
                 produceErrorCommands(),
                 emptyMap());
 
-        sleep(2, TimeUnit.SECONDS);
+        sleep(10, TimeUnit.SECONDS);
 
-        ArgumentCaptor<DeploymentForm> captor = ArgumentCaptor.forClass(DeploymentForm.class);
-        verify(dickWebFacade, times(1)).reportFailure(eq("someId"), captor.capture());
-
-        assertThat(captor.getValue()).isNotNull();
-        if (isWindows()) {
-            assertThat(captor.getValue().getLog()).isEqualTo(
-                    "Executing command: [cmd.exe, /c, return, 1]\n"
-                    + "'return' is not recognized as an internal or external command,\n"
-                    + "operable program or batch file.\n"
-                    + "\n"
-                    + "Command exited with non-zero: 1\n"
-                    + "\n"
-                    + ""
-            );
-        }
+        verify(dickWebFacade, times(1)).reportFailure(eq("someId"), any());
+        verify(dickWebFacade, times(1)).checkStatus(eq("someId"));
+        
     }
-
     private List<String> produceErrorCommands() {
         if (isWindows()) {
             return asList("cmd.exe /c return 1");
@@ -110,7 +87,7 @@ public class DeploymentServiceTest extends ContextTestBase {
             return asList("return 1");
         }
     }
-
+    
     private List<String> produceCommands() {
         if (isWindows()) {
             return asList("cmd.exe /c echo %FOO%",
@@ -122,5 +99,4 @@ public class DeploymentServiceTest extends ContextTestBase {
                     "echo bar");
         }
     }
-
 }

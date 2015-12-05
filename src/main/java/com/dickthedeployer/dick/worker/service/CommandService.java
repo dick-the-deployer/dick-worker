@@ -65,6 +65,9 @@ public class CommandService {
                     log.info("Process exited with result {}", result);
 
                     if (result != 0) {
+                        observer.onNext(
+                                new StringBuilder().append("\nCommand exited with non-zero: ").append(result).append("\n").toString()
+                        );
                         observer.onError(new ProcessExitedWithNotZeroException("Exited with not zero on " + Arrays.toString(command)));
                     }
                 }

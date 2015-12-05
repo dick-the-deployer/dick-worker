@@ -77,7 +77,9 @@ public class WorkerService {
 
         @Override
         public void onNext(Boolean shouldStop) {
-            if (shouldStop || deploymentSubscribtion.isUnsubscribed()) {
+            boolean unsubscribed = deploymentSubscribtion.isUnsubscribed();
+            log.debug("Checking if should stop: {} or is finished: {}", shouldStop, unsubscribed);
+            if (shouldStop || unsubscribed) {
                 unsubscribeFromObservables();
             }
         }
