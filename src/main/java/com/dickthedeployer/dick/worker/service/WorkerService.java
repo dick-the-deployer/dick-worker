@@ -15,7 +15,7 @@
  */
 package com.dickthedeployer.dick.worker.service;
 
-import com.dickthedeployer.dick.worker.facade.DickWebFacade;
+import com.dickthedeployer.dick.worker.facade.DickWebClient;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +39,7 @@ public class WorkerService {
     DeploymentService deploymentService;
 
     @Autowired
-    DickWebFacade dickWebFacade;
+    DickWebClient dickWebClient;
 
     @Value("${dick.worker.status.interval:3}")
     long interval;
@@ -51,7 +51,7 @@ public class WorkerService {
         Subscription deploymentSubscribtion = deploymentService.deploy(deploymentId, commands, environment);
         Observable.interval(interval, TimeUnit.SECONDS)
                 .take(maxDuration, TimeUnit.SECONDS)
-                .map(tick -> dickWebFacade.checkStatus(deploymentId).isStopped())
+                .map(tick -> dickWebClient.checkStatus(deploymentId).isStopped())
                 .subscribe(new TimeoutAndCancellGuardingSubscriber(deploymentSubscribtion));
 
     }

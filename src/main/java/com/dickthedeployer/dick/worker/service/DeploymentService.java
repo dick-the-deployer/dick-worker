@@ -15,7 +15,7 @@
  */
 package com.dickthedeployer.dick.worker.service;
 
-import com.dickthedeployer.dick.worker.facade.DickWebFacade;
+import com.dickthedeployer.dick.worker.facade.DickWebClient;
 import com.dickthedeployer.dick.worker.facade.model.DeploymentForm;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,7 +45,7 @@ public class DeploymentService {
     CommandService commandService;
 
     @Autowired
-    DickWebFacade dickWebFacade;
+    DickWebClient dickWebClient;
 
     @Value("${dick.worker.report.timespan:2}")
     long timespan;
@@ -76,16 +76,16 @@ public class DeploymentService {
 
     private void onProgress(String deploymentId, String logLines) {
         log.debug("Reporting progress on {} with \n {}", deploymentId, logLines);
-        dickWebFacade.reportProgress(deploymentId, new DeploymentForm(logLines));
+        dickWebClient.reportProgress(deploymentId, new DeploymentForm(logLines));
     }
 
     private void processError(String deploymentId, Throwable ex, StringBuffer buffer) {
-        log.info("Deployment failed", ex);
-        dickWebFacade.reportFailure(deploymentId, new DeploymentForm(buffer.toString()));
+        log.info("Deployment failed on:" + deploymentId, ex);
+        dickWebClient.reportFailure(deploymentId, new DeploymentForm(buffer.toString()));
     }
 
     private void completeDeployment(String deploymentId, StringBuffer buffer) {
-        dickWebFacade.reportSuccess(deploymentId, new DeploymentForm(buffer.toString()));
+        dickWebClient.reportSuccess(deploymentId, new DeploymentForm(buffer.toString()));
     }
 
 }
