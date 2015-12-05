@@ -16,12 +16,19 @@
 package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.exception.ProcessExitedWithNotZeroException;
+import com.google.common.base.Throwables;
+import com.watchrabbit.commons.marker.Feature;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import rx.Observable;
 import rx.Subscriber;
@@ -33,6 +40,9 @@ import rx.Subscriber;
 @Slf4j
 @Service
 public class CommandService {
+
+    @Value("${dick.worker.job.duration:86400}")
+    long maxDuration;
 
     public Observable<String> invokeWithEnvironment(Path workingDir, Map<String, String> environment, String... command) throws RuntimeException {
         return Observable.create((Subscriber<? super String> observer) -> {
@@ -52,27 +62,50 @@ public class CommandService {
                 );
                 builder.environment().putAll(environment);
                 Process process = builder.start();
-
-                try (Scanner s = new Scanner(process.getInputStream())) {
-                    while (s.hasNextLine()) {
-                        String nextLine = s.nextLine();
-                        log.debug("Emitting: {}", nextLine);
-                        observer.onNext(
-                                nextLine
-                        );
-                    }
-                    int result = process.waitFor();
-                    log.info("Process exited with result {}", result);
-
-                    if (result != 0) {
-                        observer.onError(new ProcessExitedWithNotZeroException("Exited with not zero on " + Arrays.toString(command)));
-                    }
+                try {
+                    Executors.newSingleThreadExecutor().submit(() -> {
+                        watchForProcess(process, observer, command);
+                        observer.onCompleted();
+                    }).get(maxDuration, TimeUnit.SECONDS);
+                } finally {
+                    process.destroyForcibly();
                 }
-
-                observer.onCompleted();
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
                 observer.onError(e);
             }
         });
     }
+
+    @Feature("Here is possible thread/memory leak, when reading output from process that never ends thread working on this method will be blocked also")
+    private void watchForProcess(Process process, Subscriber<? super String> observer, String[] command) throws RuntimeException {
+        try (Scanner scanner = new Scanner(process.getInputStream())) {
+            readProcessOutput(scanner, observer);
+            analyzeProcessCode(process, observer, command);
+        } catch (InterruptedException ex) {
+            throw Throwables.propagate(ex);
+        }
+    }
+
+    private void readProcessOutput(final Scanner s, Subscriber<? super String> observer) {
+        while (s.hasNextLine()) {
+            String nextLine = s.nextLine();
+            log.debug("Emitting: {}", nextLine);
+            observer.onNext(
+                    nextLine
+            );
+        }
+    }
+
+    private void analyzeProcessCode(Process process, Subscriber<? super String> observer, String[] command) throws InterruptedException {
+        int result = process.waitFor();
+        log.info("Process exited with result {}", result);
+
+        if (result != 0) {
+            observer.onNext(
+                    new StringBuilder().append("\nCommand exited with non-zero: ").append(result).append("\n").toString()
+            );
+            observer.onError(new ProcessExitedWithNotZeroException("Exited with not zero on " + Arrays.toString(command)));
+        }
+    }
+
 }

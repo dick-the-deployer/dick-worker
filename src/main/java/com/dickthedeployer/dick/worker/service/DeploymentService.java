@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import rx.Observable;
 import rx.Subscription;
+import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
 /**
@@ -46,7 +47,7 @@ public class DeploymentService {
     @Autowired
     DickWebFacade dickWebFacade;
 
-    @Value("${dick.worker.report.timespan:1}")
+    @Value("${dick.worker.report.timespan:2}")
     long timespan;
 
     public Subscription deploy(String deploymentId, List<String> commands, Map<String, String> environment) {
@@ -58,10 +59,12 @@ public class DeploymentService {
                     .map(command -> command.split(" "))
                     .concatMap(commandArray
                             -> commandService.invokeWithEnvironment(temp, environment, commandArray)
-                    ).buffer(timespan, TimeUnit.SECONDS)
+                    )
+                    .doOnNext(logLine -> buffer.append(logLine).append("\n"))
+                    .buffer(timespan, TimeUnit.SECONDS)
                     .filter(logLines -> !logLines.isEmpty())
                     .map(logLines -> StringUtils.collectionToDelimitedString(logLines, "\n"))
-                    .doOnNext(buffer::append)
+                    .subscribeOn(Schedulers.newThread())
                     .subscribe(logLines -> onProgress(deploymentId, logLines),
                             ex -> processError(deploymentId, ex, buffer),
                             () -> completeDeployment(deploymentId, buffer));
