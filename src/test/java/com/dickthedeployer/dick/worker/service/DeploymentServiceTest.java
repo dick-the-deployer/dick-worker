@@ -118,7 +118,7 @@ public class DeploymentServiceTest extends ContextTestBase {
                     "cmd.exe /c echo bar");
         } else {
             return asList("echo $FOO",
-                    "sleep 4",
+                    "sleep 3",
                     "echo bar");
         }
     }

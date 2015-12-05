@@ -18,6 +18,7 @@ package com.dickthedeployer.dick.worker.service;
 import com.dickthedeployer.dick.worker.ContextTestBase;
 import static com.dickthedeployer.dick.worker.ContextTestBase.isWindows;
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
+import com.dickthedeployer.dick.worker.facade.model.DeploymentForm;
 import com.dickthedeployer.dick.worker.facade.model.DeploymentStatus;
 import static com.watchrabbit.commons.sleep.Sleep.sleep;
 import static java.util.Arrays.asList;
@@ -25,8 +26,10 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.reset;
@@ -78,8 +81,31 @@ public class WrokerServiceTest extends ContextTestBase {
 
         verify(dickWebFacade, times(1)).reportFailure(eq("someId"), any());
         verify(dickWebFacade, times(1)).checkStatus(eq("someId"));
-        
     }
+
+    @Test
+    public void shouldStopDeploymentOnSignalFromWeb() {
+        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new DeploymentStatus(true));
+        workerService.performDeployment("someId",
+                produceCommands(),
+                emptyMap());
+
+        sleep(10, TimeUnit.SECONDS);
+
+        ArgumentCaptor<DeploymentForm> captor = ArgumentCaptor.forClass(DeploymentForm.class);
+        verify(dickWebFacade, times(1)).reportProgress(any(), any());
+        verify(dickWebFacade, times(0)).reportSuccess(any(), any());
+        verify(dickWebFacade, times(1)).reportFailure(eq("someId"), captor.capture());
+        verify(dickWebFacade, times(1)).checkStatus(eq("someId"));
+        if (isWindows()) {
+            assertThat(captor.getValue().getLog()).isEqualTo(
+                    "Executing command: [cmd.exe, /c, echo, %FOO%]\n"
+                    + "%FOO%\n"
+                    + "Executing command: [cmd.exe, /c, ping, 127.0.0.1, -n, 4, >, nul]\n"
+            );
+        }
+    }
+
     private List<String> produceErrorCommands() {
         if (isWindows()) {
             return asList("cmd.exe /c return 1");
@@ -87,7 +113,7 @@ public class WrokerServiceTest extends ContextTestBase {
             return asList("return 1");
         }
     }
-    
+
     private List<String> produceCommands() {
         if (isWindows()) {
             return asList("cmd.exe /c echo %FOO%",
