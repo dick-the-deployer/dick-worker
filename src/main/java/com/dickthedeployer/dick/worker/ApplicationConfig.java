@@ -16,11 +16,13 @@
 package com.dickthedeployer.dick.worker;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 
 /**
  *
  * @author mariusz
  */
+@EnableHystrix
 @SpringBootApplication
 public class ApplicationConfig {
 

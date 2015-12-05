@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import org.mockito.Mockito;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -42,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author mariusz
  */
-public class WrokerServiceTest extends ContextTestBase {
+public class WorkerServiceTest extends ContextTestBase {
 
     @Autowired
     WorkerService workerService;
@@ -53,6 +54,68 @@ public class WrokerServiceTest extends ContextTestBase {
     @Before
     public void prepare() {
         reset(dickWebFacade);
+    }
+
+    @Test
+    public void shouldDeployEvenIfDickWebCheckStatusFails() {
+        when(dickWebFacade.checkStatus(eq("someId"))).thenThrow(new RuntimeException());
+
+        workerService.performDeployment("someId",
+                produceCommands(),
+                singletonMap("FOO", "foo"));
+
+        sleep(4, TimeUnit.SECONDS);
+
+        verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
+        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), any());
+        verify(dickWebFacade, times(2)).checkStatus(eq("someId"));
+    }
+
+    @Test
+    public void shouldDeployEvenIfDickWebReportProgressFails() {
+        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new DeploymentStatus());
+        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportProgress(eq("someId"), any());
+
+        workerService.performDeployment("someId",
+                produceCommands(),
+                singletonMap("FOO", "foo"));
+
+        sleep(4, TimeUnit.SECONDS);
+
+        verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
+        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), any());
+        verify(dickWebFacade, times(1)).checkStatus(eq("someId"));
+    }
+
+    @Test
+    public void shouldDeployEvenIfDickWebReportSuccessFails() {
+        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new DeploymentStatus());
+        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportSuccess(eq("someId"), any());
+
+        workerService.performDeployment("someId",
+                produceCommands(),
+                singletonMap("FOO", "foo"));
+
+        sleep(4, TimeUnit.SECONDS);
+
+        verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
+        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), any());
+        verify(dickWebFacade, times(2)).checkStatus(eq("someId"));
+    }
+
+    @Test
+    public void shouldDeployEvenIfDickWebReportFailureFails() {
+        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportFailure(eq("someId"), any());
+        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new DeploymentStatus());
+
+        workerService.performDeployment("someId",
+                produceErrorCommands(),
+                emptyMap());
+
+        sleep(10, TimeUnit.SECONDS);
+
+        verify(dickWebFacade, times(1)).reportFailure(eq("someId"), any());
+        verify(dickWebFacade, times(2)).checkStatus(eq("someId"));
     }
 
     @Test
