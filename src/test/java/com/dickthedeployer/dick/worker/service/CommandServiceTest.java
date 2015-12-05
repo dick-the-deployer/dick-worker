@@ -34,6 +34,8 @@ public class CommandServiceTest {
 
     @Test
     public void shouldEmmitProperOutput() throws IOException {
+        commandService.maxDuration = 1000;
+
         Path temp = Files.createTempDirectory("deployment");
         StringBuilder stringBuffer = new StringBuilder();
 

@@ -44,13 +44,13 @@ public class WorkerService {
     @Value("${dick.worker.status.interval:3}")
     long interval;
 
-    @Value("${dick.worker.job.duration:60}")
+    @Value("${dick.worker.job.duration:86400}")
     long maxDuration;
 
     public void performDeployment(String deploymentId, List<String> commands, Map<String, String> environment) {
         Subscription deploymentSubscribtion = deploymentService.deploy(deploymentId, commands, environment);
         Observable.interval(interval, TimeUnit.SECONDS)
-                .take(maxDuration, TimeUnit.MINUTES)
+                .take(maxDuration, TimeUnit.SECONDS)
                 .map(tick -> dickWebFacade.checkStatus(deploymentId).isStopped())
                 .subscribe(new TimeoutAndCancellGuardingSubscriber(deploymentSubscribtion));
 
@@ -66,6 +66,7 @@ public class WorkerService {
 
         @Override
         public void onCompleted() {
+            log.debug("Execution timeouted, unsubscribing");
             unsubscribeFromObservables();
         }
 

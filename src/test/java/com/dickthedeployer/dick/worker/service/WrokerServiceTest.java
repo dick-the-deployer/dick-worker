@@ -106,6 +106,22 @@ public class WrokerServiceTest extends ContextTestBase {
         }
     }
 
+    @Test
+    public void shouldStopDeploymentOnTimeout() {
+        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new DeploymentStatus());
+        workerService.performDeployment("someId",
+                produceCommandsWithTimeout(100),
+                emptyMap());
+
+        sleep(15, TimeUnit.SECONDS);
+
+        ArgumentCaptor<DeploymentForm> captor = ArgumentCaptor.forClass(DeploymentForm.class);
+        verify(dickWebFacade, times(1)).reportProgress(any(), any());
+        verify(dickWebFacade, times(0)).reportSuccess(any(), any());
+        verify(dickWebFacade, times(1)).reportFailure(eq("someId"), captor.capture());
+        verify(dickWebFacade, times(3)).checkStatus(eq("someId"));
+    }
+
     private List<String> produceErrorCommands() {
         if (isWindows()) {
             return asList("cmd.exe /c return 1");
@@ -115,13 +131,17 @@ public class WrokerServiceTest extends ContextTestBase {
     }
 
     private List<String> produceCommands() {
+        return produceCommandsWithTimeout(3);
+    }
+
+    private List<String> produceCommandsWithTimeout(int timeout) {
         if (isWindows()) {
             return asList("cmd.exe /c echo %FOO%",
-                    "cmd.exe /c ping 127.0.0.1 -n 4 > nul",
+                    "cmd.exe /c ping 127.0.0.1 -n " + (timeout + 1) + " > nul",
                     "cmd.exe /c echo bar");
         } else {
             return asList("echo $FOO",
-                    "sleep 3",
+                    "sleep " + timeout,
                     "echo bar");
         }
     }

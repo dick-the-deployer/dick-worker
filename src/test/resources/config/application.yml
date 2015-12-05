@@ -1,5 +1,6 @@
 dick.web:
   token: foo-bar
   url: http://foo-bar.com
+dick.worker.job.duration: 10
   
 logging.level.com.dickthedeployer: DEBUG

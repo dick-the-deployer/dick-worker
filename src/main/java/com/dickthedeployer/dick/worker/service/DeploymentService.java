@@ -62,6 +62,7 @@ public class DeploymentService {
                     )
                     .doOnNext(logLine -> buffer.append(logLine).append("\n"))
                     .buffer(timespan, TimeUnit.SECONDS)
+                    .filter(logLines -> !logLines.isEmpty())
                     .map(logLines -> StringUtils.collectionToDelimitedString(logLines, "\n"))
                     .subscribeOn(Schedulers.newThread())
                     .subscribe(logLines -> onProgress(deploymentId, logLines),
