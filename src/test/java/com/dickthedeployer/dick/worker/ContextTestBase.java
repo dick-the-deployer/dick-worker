@@ -16,6 +16,8 @@
 package com.dickthedeployer.dick.worker;
 
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
+import static java.util.Arrays.asList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.RunWith;
 import static org.mockito.Mockito.mock;
@@ -44,5 +46,29 @@ public class ContextTestBase {
     public static boolean isWindows() {
         log.debug("OS NAME {}", System.getProperty("os.name").toLowerCase());
         return (System.getProperty("os.name").toLowerCase().contains("win"));
+    }
+
+    protected List<String> produceErrorCommands() {
+        if (isWindows()) {
+            return asList("cmd.exe /c return 1");
+        } else {
+            return asList("return 1");
+        }
+    }
+
+    protected List<String> produceCommands() {
+        return produceCommandsWithTimeout(3);
+    }
+
+    protected List<String> produceCommandsWithTimeout(int timeout) {
+        if (isWindows()) {
+            return asList("cmd.exe /c echo %FOO%",
+                    "cmd.exe /c ping 127.0.0.1 -n " + (timeout + 1) + " > nul",
+                    "cmd.exe /c echo bar");
+        } else {
+            return asList("echo $FOO",
+                    "sleep " + timeout,
+                    "echo bar");
+        }
     }
 }

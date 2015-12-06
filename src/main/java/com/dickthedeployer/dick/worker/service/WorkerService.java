@@ -36,7 +36,7 @@ import rx.Subscription;
 public class WorkerService {
 
     @Autowired
-    DeploymentService deploymentService;
+    BuildService buildService;
 
     @Autowired
     DickWebClient dickWebClient;
@@ -47,11 +47,11 @@ public class WorkerService {
     @Value("${dick.worker.job.duration:86400}")
     long maxDuration;
 
-    public void performDeployment(String deploymentId, List<String> commands, Map<String, String> environment) {
-        Subscription deploymentSubscribtion = deploymentService.deploy(deploymentId, commands, environment);
+    public void performBuild(String buildId, List<String> commands, Map<String, String> environment) {
+        Subscription deploymentSubscribtion = buildService.build(buildId, commands, environment);
         Observable.interval(interval, TimeUnit.SECONDS)
                 .take(maxDuration, TimeUnit.SECONDS)
-                .map(tick -> dickWebClient.checkStatus(deploymentId).isStopped())
+                .map(tick -> dickWebClient.checkStatus(buildId).isStopped())
                 .subscribe(new TimeoutAndCancellGuardingSubscriber(deploymentSubscribtion));
 
     }
@@ -72,7 +72,7 @@ public class WorkerService {
 
         @Override
         public void onError(Throwable ex) {
-            log.error("Something went wrong on deployment guarding observable", ex);
+            log.error("Something went wrong on build guarding observable", ex);
             unsubscribeFromObservables();
         }
 

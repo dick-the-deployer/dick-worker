@@ -16,7 +16,7 @@
 package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.facade.DickWebClient;
-import com.dickthedeployer.dick.worker.facade.model.DeploymentForm;
+import com.dickthedeployer.dick.worker.facade.model.BuildForm;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,7 +39,7 @@ import rx.subscriptions.Subscriptions;
  */
 @Slf4j
 @Service
-public class DeploymentService {
+public class BuildService {
 
     @Autowired
     CommandService commandService;
@@ -50,10 +50,10 @@ public class DeploymentService {
     @Value("${dick.worker.report.timespan:2}")
     long timespan;
 
-    public Subscription deploy(String deploymentId, List<String> commands, Map<String, String> environment) {
+    public Subscription build(String buildId, List<String> commands, Map<String, String> environment) {
         StringBuffer buffer = new StringBuffer();
         try {
-            Path temp = Files.createTempDirectory("deployment-" + deploymentId);
+            Path temp = Files.createTempDirectory("build-" + buildId);
             return Observable.just(commands)
                     .concatMap(Observable::from)
                     .map(command -> command.split(" "))
@@ -65,27 +65,27 @@ public class DeploymentService {
                     .filter(logLines -> !logLines.isEmpty())
                     .map(logLines -> StringUtils.collectionToDelimitedString(logLines, "\n"))
                     .subscribeOn(Schedulers.newThread())
-                    .subscribe(logLines -> onProgress(deploymentId, logLines),
-                            ex -> processError(deploymentId, ex, buffer),
-                            () -> completeDeployment(deploymentId, buffer));
+                    .subscribe(logLines -> onProgress(buildId, logLines),
+                            ex -> processError(buildId, ex, buffer),
+                            () -> completeDeployment(buildId, buffer));
         } catch (IOException ex) {
-            processError(deploymentId, ex, buffer);
+            processError(buildId, ex, buffer);
             return Subscriptions.empty();
         }
     }
 
-    private void onProgress(String deploymentId, String logLines) {
-        log.debug("Reporting progress on {} with \n {}", deploymentId, logLines);
-        dickWebClient.reportProgress(deploymentId, new DeploymentForm(logLines));
+    private void onProgress(String buildId, String logLines) {
+        log.debug("Reporting progress on {} with \n {}", buildId, logLines);
+        dickWebClient.reportProgress(buildId, new BuildForm(logLines));
     }
 
-    private void processError(String deploymentId, Throwable ex, StringBuffer buffer) {
-        log.info("Deployment failed on:" + deploymentId, ex);
-        dickWebClient.reportFailure(deploymentId, new DeploymentForm(buffer.toString()));
+    private void processError(String buildId, Throwable ex, StringBuffer buffer) {
+        log.info("Build failed on:" + buildId, ex);
+        dickWebClient.reportFailure(buildId, new BuildForm(buffer.toString()));
     }
 
-    private void completeDeployment(String deploymentId, StringBuffer buffer) {
-        dickWebClient.reportSuccess(deploymentId, new DeploymentForm(buffer.toString()));
+    private void completeDeployment(String buildId, StringBuffer buffer) {
+        dickWebClient.reportSuccess(buildId, new BuildForm(buffer.toString()));
     }
 
 }

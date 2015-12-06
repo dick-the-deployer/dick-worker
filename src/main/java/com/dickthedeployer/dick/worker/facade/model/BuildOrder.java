@@ -15,16 +15,22 @@
  */
 package com.dickthedeployer.dick.worker.facade.model;
 
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  *
  * @author mariusz
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-public class DeploymentForm {
+public class BuildOrder {
 
-    private String log;
+    private String buildId;
+    private List<String> commands;
+    private Map<String, String> environment;
 }

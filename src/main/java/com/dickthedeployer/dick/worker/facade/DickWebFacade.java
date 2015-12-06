@@ -15,8 +15,9 @@
  */
 package com.dickthedeployer.dick.worker.facade;
 
-import com.dickthedeployer.dick.worker.facade.model.DeploymentForm;
-import com.dickthedeployer.dick.worker.facade.model.DeploymentStatus;
+import com.dickthedeployer.dick.worker.facade.model.BuildForm;
+import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
+import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,15 +32,18 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @FeignClient(url = "${dick.web.url}")
 public interface DickWebFacade {
 
-    @RequestMapping(value = "/deployment/{id}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    void reportProgress(@PathVariable String id, @RequestBody DeploymentForm form);
+    @RequestMapping(value = "/build/{id}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    void reportProgress(@PathVariable String id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/deployment/{id}/status", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    DeploymentStatus checkStatus(@PathVariable String id);
+    @RequestMapping(value = "/build/{id}/status", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    BuildStatus checkStatus(@PathVariable("id") String id);
 
-    @RequestMapping(value = "/deployment/{id}/failure", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    void reportFailure(@PathVariable String id, @RequestBody DeploymentForm form);
+    @RequestMapping(value = "/build/{id}/failure", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    void reportFailure(@PathVariable String id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/deployment/{id}/success", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    void reportSuccess(@PathVariable String id, @RequestBody DeploymentForm form);
+    @RequestMapping(value = "/build/{id}/success", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    void reportSuccess(@PathVariable String id, @RequestBody BuildForm form);
+
+    @RequestMapping(value = "/build/peek/{dickWorkerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    BuildOrder peekBuild(@PathVariable("dickWorkerName") String dickWorkerName);
 }

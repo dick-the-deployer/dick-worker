@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeploymentStatus {
+public class BuildStatus {
 
     public boolean stopped;
 }
