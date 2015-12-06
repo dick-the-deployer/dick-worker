@@ -16,6 +16,14 @@
 package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.facade.DickWebClient;
+import com.dickthedeployer.dick.worker.facade.model.RegistrationData;
+import com.google.common.base.Throwables;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import javax.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,6 +34,7 @@ import org.springframework.stereotype.Service;
  * @author mariusz
  */
 @Service
+@Slf4j
 public class SchedulerService {
 
     @Autowired
@@ -34,8 +43,25 @@ public class SchedulerService {
     @Autowired
     WorkerService workerService;
 
-    @Value("${dick.worker.name}")
+    @Value("${dick.worker.name:}")
     String dickWorkerName;
+
+    @Value("${user.home}")
+    String userHome;
+
+    @PostConstruct
+    public void init() {
+        if (dickWorkerName == null) {
+            RegistrationData data = dickWebClient.register();
+            dickWorkerName = "dick.worker.name=" + data.getName();
+            try {
+                Files.write(Paths.get(userHome + "/worker.properties"), dickWorkerName.getBytes("utf-8"), StandardOpenOption.CREATE);
+            } catch (IOException ex) {
+                log.error("Creating property file with name failed!", ex);
+                throw Throwables.propagate(ex);
+            }
+        }
+    }
 
     @Scheduled(fixedRateString = "${dick.worker.peek.interval:3000}")
     public void sheduleWork() {
