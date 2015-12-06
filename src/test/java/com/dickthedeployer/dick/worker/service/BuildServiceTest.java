@@ -17,12 +17,10 @@ package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.ContextTestBase;
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
-import com.dickthedeployer.dick.worker.facade.model.DeploymentForm;
+import com.dickthedeployer.dick.worker.facade.model.BuildForm;
 import static com.watchrabbit.commons.sleep.Sleep.sleep;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import org.junit.Before;
@@ -38,10 +36,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * @author mariusz
  */
-public class DeploymentServiceTest extends ContextTestBase {
+public class BuildServiceTest extends ContextTestBase {
 
     @Autowired
-    DeploymentService deploymentService;
+    BuildService buildService;
 
     @Autowired
     DickWebFacade dickWebFacade;
@@ -52,14 +50,14 @@ public class DeploymentServiceTest extends ContextTestBase {
     }
 
     @Test
-    public void shouldDeploySucessfully() {
-        deploymentService.deploy("someId",
+    public void shouldBuildSucessfully() {
+        buildService.build("someId",
                 produceCommands(),
                 singletonMap("FOO", "foo"));
 
         sleep(6, TimeUnit.SECONDS);
 
-        ArgumentCaptor<DeploymentForm> captor = ArgumentCaptor.forClass(DeploymentForm.class);
+        ArgumentCaptor<BuildForm> captor = ArgumentCaptor.forClass(BuildForm.class);
         verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
         verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), captor.capture());
 
@@ -80,13 +78,13 @@ public class DeploymentServiceTest extends ContextTestBase {
 
     @Test
     public void shouldReportError() {
-        deploymentService.deploy("someId",
+        buildService.build("someId",
                 produceErrorCommands(),
                 emptyMap());
 
         sleep(2, TimeUnit.SECONDS);
 
-        ArgumentCaptor<DeploymentForm> captor = ArgumentCaptor.forClass(DeploymentForm.class);
+        ArgumentCaptor<BuildForm> captor = ArgumentCaptor.forClass(BuildForm.class);
         verify(dickWebFacade, times(1)).reportFailure(eq("someId"), captor.capture());
 
         assertThat(captor.getValue()).isNotNull();
@@ -100,26 +98,6 @@ public class DeploymentServiceTest extends ContextTestBase {
                     + "\n"
                     + ""
             );
-        }
-    }
-
-    private List<String> produceErrorCommands() {
-        if (isWindows()) {
-            return asList("cmd.exe /c return 1");
-        } else {
-            return asList("return 1");
-        }
-    }
-
-    private List<String> produceCommands() {
-        if (isWindows()) {
-            return asList("cmd.exe /c echo %FOO%",
-                    "cmd.exe /c ping 127.0.0.1 -n 4 > nul",
-                    "cmd.exe /c echo bar");
-        } else {
-            return asList("echo $FOO",
-                    "sleep 3",
-                    "echo bar");
         }
     }
 

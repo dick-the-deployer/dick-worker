@@ -15,9 +15,11 @@
  */
 package com.dickthedeployer.dick.worker.facade;
 
-import com.dickthedeployer.dick.worker.facade.model.DeploymentForm;
-import com.dickthedeployer.dick.worker.facade.model.DeploymentStatus;
+import com.dickthedeployer.dick.worker.facade.model.BuildForm;
+import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
+import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,40 +36,50 @@ public class DickWebClient {
     DickWebFacade dickWebFacade;
 
     @HystrixCommand(fallbackMethod = "logProgress")
-    public void reportProgress(String id, DeploymentForm form) {
+    public void reportProgress(String id, BuildForm form) {
         dickWebFacade.reportProgress(id, form);
     }
 
     @HystrixCommand(fallbackMethod = "statusFallback")
-    public DeploymentStatus checkStatus(String id) {
+    public BuildStatus checkStatus(String id) {
         return dickWebFacade.checkStatus(id);
     }
 
     @HystrixCommand(fallbackMethod = "logFailure")
-    public void reportFailure(String id, DeploymentForm form) {
+    public void reportFailure(String id, BuildForm form) {
         dickWebFacade.reportFailure(id, form);
     }
 
     @HystrixCommand(fallbackMethod = "logSuccess")
-    public void reportSuccess(String id, DeploymentForm form) {
+    public void reportSuccess(String id, BuildForm form) {
         dickWebFacade.reportSuccess(id, form);
     }
 
-    public void logProgress(String id, DeploymentForm form) {
+    @HystrixCommand(fallbackMethod = "logBuildPeek")
+    public Optional<BuildOrder> peekBuild(String dickWorkerName) {
+        return Optional.ofNullable(dickWebFacade.peekBuild(dickWorkerName));
+    }
+
+    public void logProgress(String id, BuildForm form) {
         log.error("Cannot send progress to dick web, logging to console {}", form.getLog());
     }
 
-    public void logSuccess(String id, DeploymentForm form) {
+    public void logSuccess(String id, BuildForm form) {
         log.error("Cannot send success report to dick web, logging to console {}", form.getLog());
     }
 
-    public void logFailure(String id, DeploymentForm form) {
+    public void logFailure(String id, BuildForm form) {
         log.error("Cannot send failure report to dick web, logging to console {}", form.getLog());
     }
 
-    public DeploymentStatus statusFallback(String id) {
-        log.info("Cannot check deployment status using hermes web, assuming ok");
-        return new DeploymentStatus(false);
+    public BuildStatus statusFallback(String id) {
+        log.info("Cannot check build status using hermes web, assuming ok");
+        return new BuildStatus(false);
+    }
+
+    public Optional<BuildOrder> logBuildPeek(String dickWorkerName) {
+        log.info("Cannot peek build order, assuming no work");
+        return Optional.empty();
     }
 
 }
