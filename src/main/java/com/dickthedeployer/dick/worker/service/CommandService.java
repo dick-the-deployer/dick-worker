@@ -87,7 +87,7 @@ public class CommandService {
     }
 
     private void readProcessOutput(final Scanner s, Subscriber<? super String> observer) {
-        while (s.hasNextLine()) {
+        while (s.hasNextLine() && !Thread.currentThread().isInterrupted()) {
             String nextLine = s.nextLine();
             log.debug("Emitting: {}", nextLine);
             observer.onNext(
