@@ -33,19 +33,19 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @FeignClient(url = "${dick.web.url}")
 public interface DickWebFacade {
 
-    @RequestMapping(value = "/builds/{id}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/job-builds/{id}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     void reportProgress(@PathVariable String id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/builds/{id}/status", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/job-builds/{id}/status", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     BuildStatus checkStatus(@PathVariable("id") String id);
 
-    @RequestMapping(value = "/builds/{id}/failure", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/job-builds/{id}/failure", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     void reportFailure(@PathVariable String id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/builds/{id}/success", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/job-builds/{id}/success", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     void reportSuccess(@PathVariable String id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/builds/peek/{dickWorkerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/job-builds/peek/{dickWorkerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     BuildOrder peekBuild(@PathVariable("dickWorkerName") String dickWorkerName);
 
     @RequestMapping(value = "/workers/register", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
