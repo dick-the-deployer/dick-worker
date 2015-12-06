@@ -19,6 +19,7 @@ import com.dickthedeployer.dick.worker.ContextTestBase;
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
 import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
 import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
+import com.dickthedeployer.dick.worker.facade.model.RegistrationData;
 import static com.watchrabbit.commons.sleep.Sleep.sleep;
 import static java.util.Collections.singletonMap;
 import java.util.concurrent.TimeUnit;
@@ -41,9 +42,21 @@ public class SchedulerServiceTest extends ContextTestBase {
     @Autowired
     DickWebFacade dickWebFacade;
 
+    @Autowired
+    SchedulerService schedulerService;
+
     @Before
     public void prepare() {
         reset(dickWebFacade);
+    }
+
+    @Test
+    public void shouldCreatePropertiesName() {
+        schedulerService.dickWorkerName = null;
+        when(dickWebFacade.register()).thenReturn(new RegistrationData("test-build-dude"));
+        schedulerService.init();
+
+        System.err.println("");
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 dick the deployer.
+ * Copyright dick the deployer.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dickthedeployer.dick.worker;
+package com.dickthedeployer.dick.worker.facade.model;
 
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.hystrix.EnableHystrix;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  *
  * @author mariusz
  */
-@EnableHystrix
-@EnableScheduling
-@SpringBootApplication
-@PropertySource(ignoreResourceNotFound = true, value = "file:${user.home}/worker.properties")
-public class ApplicationConfig {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class RegistrationData {
 
+    private String name;
+;
 }

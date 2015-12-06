@@ -18,6 +18,7 @@ package com.dickthedeployer.dick.worker.facade;
 import com.dickthedeployer.dick.worker.facade.model.BuildForm;
 import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
 import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
+import com.dickthedeployer.dick.worker.facade.model.RegistrationData;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,4 +47,7 @@ public interface DickWebFacade {
 
     @RequestMapping(value = "/build/peek/{dickWorkerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     BuildOrder peekBuild(@PathVariable("dickWorkerName") String dickWorkerName);
+
+    @RequestMapping(value = "/worker/register", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    RegistrationData register();
 }

@@ -18,6 +18,7 @@ package com.dickthedeployer.dick.worker.facade;
 import com.dickthedeployer.dick.worker.facade.model.BuildForm;
 import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
 import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
+import com.dickthedeployer.dick.worker.facade.model.RegistrationData;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +59,10 @@ public class DickWebClient {
     @HystrixCommand(fallbackMethod = "logBuildPeek")
     public Optional<BuildOrder> peekBuild(String dickWorkerName) {
         return Optional.ofNullable(dickWebFacade.peekBuild(dickWorkerName));
+    }
+
+    public RegistrationData register() {
+        return dickWebFacade.register();
     }
 
     public void logProgress(String id, BuildForm form) {
