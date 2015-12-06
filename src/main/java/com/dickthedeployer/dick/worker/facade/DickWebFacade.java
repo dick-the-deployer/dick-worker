@@ -33,21 +33,21 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @FeignClient(url = "${dick.web.url}")
 public interface DickWebFacade {
 
-    @RequestMapping(value = "/build/{id}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/builds/{id}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     void reportProgress(@PathVariable String id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/build/{id}/status", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/builds/{id}/status", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     BuildStatus checkStatus(@PathVariable("id") String id);
 
-    @RequestMapping(value = "/build/{id}/failure", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/builds/{id}/failure", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     void reportFailure(@PathVariable String id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/build/{id}/success", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/builds/{id}/success", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     void reportSuccess(@PathVariable String id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/build/peek/{dickWorkerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/builds/peek/{dickWorkerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     BuildOrder peekBuild(@PathVariable("dickWorkerName") String dickWorkerName);
 
-    @RequestMapping(value = "/worker/register", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/workers/register", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     RegistrationData register();
 }
