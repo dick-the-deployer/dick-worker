@@ -34,16 +34,16 @@ import org.springframework.web.bind.annotation.RequestMethod;
 public interface DickWebFacade {
 
     @RequestMapping(value = "/job-builds/{id}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    void reportProgress(@PathVariable String id, @RequestBody BuildForm form);
+    void reportProgress(@PathVariable("id") Long id, @RequestBody BuildForm form);
 
     @RequestMapping(value = "/job-builds/{id}/status", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    BuildStatus checkStatus(@PathVariable("id") String id);
+    BuildStatus checkStatus(@PathVariable("id") Long id);
 
     @RequestMapping(value = "/job-builds/{id}/failure", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    void reportFailure(@PathVariable String id, @RequestBody BuildForm form);
+    void reportFailure(@PathVariable("id") Long id, @RequestBody BuildForm form);
 
     @RequestMapping(value = "/job-builds/{id}/success", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    void reportSuccess(@PathVariable String id, @RequestBody BuildForm form);
+    void reportSuccess(@PathVariable("id") Long id, @RequestBody BuildForm form);
 
     @RequestMapping(value = "/job-builds/peek/{dickWorkerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     BuildOrder peekBuild(@PathVariable("dickWorkerName") String dickWorkerName);

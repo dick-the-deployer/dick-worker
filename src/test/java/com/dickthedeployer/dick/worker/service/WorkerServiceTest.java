@@ -56,98 +56,98 @@ public class WorkerServiceTest extends ContextTestBase {
 
     @Test
     public void shouldBuildEvenIfDickWebCheckStatusFails() {
-        when(dickWebFacade.checkStatus(eq("someId"))).thenThrow(new RuntimeException());
+        when(dickWebFacade.checkStatus(eq(123L))).thenThrow(new RuntimeException());
 
-        workerService.performBuild("someId",
+        workerService.performBuild(123L,
                 produceCommands(),
                 singletonMap("FOO", "foo"));
 
         sleep(7, TimeUnit.SECONDS);
 
-        verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
-        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), any());
-        verify(dickWebFacade, times(2)).checkStatus(eq("someId"));
+        verify(dickWebFacade, times(2)).reportProgress(eq(123L), any());
+        verify(dickWebFacade, times(1)).reportSuccess(eq(123L), any());
+        verify(dickWebFacade, times(2)).checkStatus(eq(123L));
     }
 
     @Test
     public void shouldBuildEvenIfDickWebReportProgressFails() {
-        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new BuildStatus());
-        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportProgress(eq("someId"), any());
+        when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
+        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportProgress(eq(123L), any());
 
-        workerService.performBuild("someId",
+        workerService.performBuild(123L,
                 produceCommands(),
                 singletonMap("FOO", "foo"));
 
         sleep(7, TimeUnit.SECONDS);
 
-        verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
-        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), any());
-        verify(dickWebFacade, times(2)).checkStatus(eq("someId"));
+        verify(dickWebFacade, times(2)).reportProgress(eq(123L), any());
+        verify(dickWebFacade, times(1)).reportSuccess(eq(123L), any());
+        verify(dickWebFacade, times(2)).checkStatus(eq(123L));
     }
 
     @Test
     public void shouldBuildEvenIfDickWebReportSuccessFails() {
-        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new BuildStatus());
-        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportSuccess(eq("someId"), any());
+        when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
+        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportSuccess(eq(123L), any());
 
-        workerService.performBuild("someId",
+        workerService.performBuild(123L,
                 produceCommands(),
                 singletonMap("FOO", "foo"));
 
         sleep(7, TimeUnit.SECONDS);
 
-        verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
-        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), any());
-        verify(dickWebFacade, times(2)).checkStatus(eq("someId"));
+        verify(dickWebFacade, times(2)).reportProgress(eq(123L), any());
+        verify(dickWebFacade, times(1)).reportSuccess(eq(123L), any());
+        verify(dickWebFacade, times(2)).checkStatus(eq(123L));
     }
 
     @Test
     public void shouldBuildEvenIfDickWebReportFailureFails() {
-        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportFailure(eq("someId"), any());
-        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new BuildStatus());
+        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportFailure(eq(123L), any());
+        when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
 
-        workerService.performBuild("someId",
+        workerService.performBuild(123L,
                 produceErrorCommands(),
                 emptyMap());
 
         sleep(10, TimeUnit.SECONDS);
 
-        verify(dickWebFacade, times(1)).reportFailure(eq("someId"), any());
-        verify(dickWebFacade, times(1)).checkStatus(eq("someId"));
+        verify(dickWebFacade, times(1)).reportFailure(eq(123L), any());
+        verify(dickWebFacade, times(1)).checkStatus(eq(123L));
     }
 
     @Test
     public void shouldBuildSucessfullyCheckingIfShouldStop() {
-        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new BuildStatus());
+        when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
 
-        workerService.performBuild("someId",
+        workerService.performBuild(123L,
                 produceCommands(),
                 singletonMap("FOO", "foo"));
 
         sleep(10, TimeUnit.SECONDS);
 
-        verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
-        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), any());
-        verify(dickWebFacade, times(2)).checkStatus(eq("someId"));
+        verify(dickWebFacade, times(2)).reportProgress(eq(123L), any());
+        verify(dickWebFacade, times(1)).reportSuccess(eq(123L), any());
+        verify(dickWebFacade, times(2)).checkStatus(eq(123L));
     }
 
     @Test
     public void shouldReportErrorCheckingIfShouldStop() {
-        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new BuildStatus());
-        workerService.performBuild("someId",
+        when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
+        workerService.performBuild(123L,
                 produceErrorCommands(),
                 emptyMap());
 
         sleep(10, TimeUnit.SECONDS);
 
-        verify(dickWebFacade, times(1)).reportFailure(eq("someId"), any());
-        verify(dickWebFacade, times(1)).checkStatus(eq("someId"));
+        verify(dickWebFacade, times(1)).reportFailure(eq(123L), any());
+        verify(dickWebFacade, times(1)).checkStatus(eq(123L));
     }
 
     @Test
     public void shouldStopBuildOnSignalFromWeb() {
-        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new BuildStatus(true));
-        workerService.performBuild("someId",
+        when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus(true));
+        workerService.performBuild(123L,
                 produceCommands(),
                 emptyMap());
 
@@ -156,8 +156,8 @@ public class WorkerServiceTest extends ContextTestBase {
         ArgumentCaptor<BuildForm> captor = ArgumentCaptor.forClass(BuildForm.class);
         verify(dickWebFacade, times(1)).reportProgress(any(), any());
         verify(dickWebFacade, times(0)).reportSuccess(any(), any());
-        verify(dickWebFacade, times(1)).reportFailure(eq("someId"), captor.capture());
-        verify(dickWebFacade, times(1)).checkStatus(eq("someId"));
+        verify(dickWebFacade, times(1)).reportFailure(eq(123L), captor.capture());
+        verify(dickWebFacade, times(1)).checkStatus(eq(123L));
         if (isWindows()) {
             assertThat(captor.getValue().getLog()).isEqualTo(
                     "Executing command: [cmd.exe, /c, echo, %FOO%]\n"
@@ -169,8 +169,8 @@ public class WorkerServiceTest extends ContextTestBase {
 
     @Test
     public void shouldStopBuildOnTimeout() {
-        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new BuildStatus());
-        workerService.performBuild("someId",
+        when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
+        workerService.performBuild(123L,
                 produceCommandsWithTimeout(100),
                 emptyMap());
 
@@ -179,8 +179,8 @@ public class WorkerServiceTest extends ContextTestBase {
         ArgumentCaptor<BuildForm> captor = ArgumentCaptor.forClass(BuildForm.class);
         verify(dickWebFacade, times(1)).reportProgress(any(), any());
         verify(dickWebFacade, times(0)).reportSuccess(any(), any());
-        verify(dickWebFacade, times(1)).reportFailure(eq("someId"), captor.capture());
-        verify(dickWebFacade, times(3)).checkStatus(eq("someId"));
+        verify(dickWebFacade, times(1)).reportFailure(eq(123L), captor.capture());
+        verify(dickWebFacade, times(3)).checkStatus(eq(123L));
     }
 
 }

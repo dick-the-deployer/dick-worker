@@ -47,7 +47,7 @@ public class WorkerService {
     @Value("${dick.worker.job.duration:86400}")
     long maxDuration;
 
-    public void performBuild(String buildId, List<String> commands, Map<String, String> environment) {
+    public void performBuild(Long buildId, List<String> commands, Map<String, String> environment) {
         Subscription deploymentSubscribtion = buildService.build(buildId, commands, environment);
         Observable.interval(interval, TimeUnit.SECONDS)
                 .take(maxDuration, TimeUnit.SECONDS)
