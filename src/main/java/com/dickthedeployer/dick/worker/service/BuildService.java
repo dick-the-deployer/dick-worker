@@ -50,7 +50,7 @@ public class BuildService {
     @Value("${dick.worker.report.timespan:2}")
     long timespan;
 
-    public Subscription build(String buildId, List<String> commands, Map<String, String> environment) {
+    public Subscription build(Long buildId, List<String> commands, Map<String, String> environment) {
         StringBuffer buffer = new StringBuffer();
         try {
             Path temp = Files.createTempDirectory("build-" + buildId);
@@ -74,17 +74,17 @@ public class BuildService {
         }
     }
 
-    private void onProgress(String buildId, String logLines) {
+    private void onProgress(Long buildId, String logLines) {
         log.debug("Reporting progress on {} with \n {}", buildId, logLines);
         dickWebClient.reportProgress(buildId, new BuildForm(logLines));
     }
 
-    private void processError(String buildId, Throwable ex, StringBuffer buffer) {
+    private void processError(Long buildId, Throwable ex, StringBuffer buffer) {
         log.info("Build failed on:" + buildId, ex);
         dickWebClient.reportFailure(buildId, new BuildForm(buffer.toString()));
     }
 
-    private void completeDeployment(String buildId, StringBuffer buffer) {
+    private void completeDeployment(Long buildId, StringBuffer buffer) {
         dickWebClient.reportSuccess(buildId, new BuildForm(buffer.toString()));
     }
 

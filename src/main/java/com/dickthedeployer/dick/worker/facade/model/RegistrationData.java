@@ -29,5 +29,5 @@ import lombok.NoArgsConstructor;
 public class RegistrationData {
 
     private String name;
-;
+
 }

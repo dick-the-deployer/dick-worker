@@ -51,15 +51,15 @@ public class BuildServiceTest extends ContextTestBase {
 
     @Test
     public void shouldBuildSucessfully() {
-        buildService.build("someId",
+        buildService.build(123L,
                 produceCommands(),
                 singletonMap("FOO", "foo"));
 
         sleep(6, TimeUnit.SECONDS);
 
         ArgumentCaptor<BuildForm> captor = ArgumentCaptor.forClass(BuildForm.class);
-        verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
-        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), captor.capture());
+        verify(dickWebFacade, times(2)).reportProgress(eq(123L), any());
+        verify(dickWebFacade, times(1)).reportSuccess(eq(123L), captor.capture());
 
         assertThat(captor.getValue()).isNotNull();
         if (isWindows()) {
@@ -78,14 +78,14 @@ public class BuildServiceTest extends ContextTestBase {
 
     @Test
     public void shouldReportError() {
-        buildService.build("someId",
+        buildService.build(123L,
                 produceErrorCommands(),
                 emptyMap());
 
         sleep(2, TimeUnit.SECONDS);
 
         ArgumentCaptor<BuildForm> captor = ArgumentCaptor.forClass(BuildForm.class);
-        verify(dickWebFacade, times(1)).reportFailure(eq("someId"), captor.capture());
+        verify(dickWebFacade, times(1)).reportFailure(eq(123L), captor.capture());
 
         assertThat(captor.getValue()).isNotNull();
         if (isWindows()) {

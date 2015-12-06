@@ -61,15 +61,15 @@ public class SchedulerServiceTest extends ContextTestBase {
 
     @Test
     public void shouldPeekFromWebAndBuild() {
-        when(dickWebFacade.checkStatus(eq("someId"))).thenReturn(new BuildStatus());
+        when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
         when(dickWebFacade.peekBuild(eq("test-build-dude")))
-                .thenReturn(new BuildOrder("someId", produceCommands(), singletonMap("FOO", "foo")))
+                .thenReturn(new BuildOrder(123L, produceCommands(), singletonMap("FOO", "foo")))
                 .thenReturn(null);
 
         sleep(10, TimeUnit.SECONDS);
 
-        verify(dickWebFacade, times(2)).reportProgress(eq("someId"), any());
-        verify(dickWebFacade, times(1)).reportSuccess(eq("someId"), any());
-        verify(dickWebFacade, times(2)).checkStatus(eq("someId"));
+        verify(dickWebFacade, times(2)).reportProgress(eq(123L), any());
+        verify(dickWebFacade, times(1)).reportSuccess(eq(123L), any());
+        verify(dickWebFacade, times(2)).checkStatus(eq(123L));
     }
 }

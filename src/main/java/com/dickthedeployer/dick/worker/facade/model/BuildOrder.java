@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BuildOrder {
 
-    private String buildId;
+    private Long buildId;
     private List<String> commands;
     private Map<String, String> environment;
 }
