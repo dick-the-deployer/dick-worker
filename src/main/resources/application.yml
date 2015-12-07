@@ -1,0 +1,4 @@
+dick.web:
+  token: secure-token
+  url: http://localhost:9000
+  
