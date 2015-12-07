@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 /**
  *
@@ -51,7 +52,7 @@ public class SchedulerService {
 
     @PostConstruct
     public void init() {
-        if (dickWorkerName == null) {
+        if (StringUtils.isEmpty(dickWorkerName)) {
             RegistrationData data = dickWebClient.register();
             log.info("Obtained name from web {}", data.getName());
             dickWorkerName = "dick.worker.name=" + data.getName();
@@ -66,7 +67,7 @@ public class SchedulerService {
 
     @Scheduled(fixedRateString = "${dick.worker.peek.interval:3000}")
     public void sheduleWork() {
-        if (dickWorkerName != null) {
+        if (!StringUtils.isEmpty(dickWorkerName)) {
             dickWebClient.peekBuild(dickWorkerName)
                     .ifPresent(order -> workerService.performBuild(order.getBuildId(), order.getCommands(), order.getEnvironment()));
         }
