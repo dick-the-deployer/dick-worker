@@ -96,6 +96,17 @@
                 <artifactId>wrapper-maven-plugin</artifactId>
                 <version>0.0.4</version>
             </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <configuration>
+                    <skip>${skipGit}</skip>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
