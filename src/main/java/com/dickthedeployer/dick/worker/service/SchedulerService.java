@@ -53,6 +53,7 @@ public class SchedulerService {
     public void init() {
         if (dickWorkerName == null) {
             RegistrationData data = dickWebClient.register();
+            log.info("Obtained name from web {}", data.getName());
             dickWorkerName = "dick.worker.name=" + data.getName();
             try {
                 Files.write(Paths.get(userHome + "/worker.properties"), dickWorkerName.getBytes("utf-8"), StandardOpenOption.CREATE);
