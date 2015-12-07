@@ -65,7 +65,9 @@ public class SchedulerService {
 
     @Scheduled(fixedRateString = "${dick.worker.peek.interval:3000}")
     public void sheduleWork() {
-        dickWebClient.peekBuild(dickWorkerName)
-                .ifPresent(order -> workerService.performBuild(order.getBuildId(), order.getCommands(), order.getEnvironment()));
+        if (dickWorkerName != null) {
+            dickWebClient.peekBuild(dickWorkerName)
+                    .ifPresent(order -> workerService.performBuild(order.getBuildId(), order.getCommands(), order.getEnvironment()));
+        }
     }
 }
