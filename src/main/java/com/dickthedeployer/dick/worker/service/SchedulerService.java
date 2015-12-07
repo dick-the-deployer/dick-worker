@@ -55,9 +55,10 @@ public class SchedulerService {
         if (StringUtils.isEmpty(dickWorkerName)) {
             RegistrationData data = dickWebClient.register();
             log.info("Obtained name from web {}", data.getName());
-            dickWorkerName = "dick.worker.name=" + data.getName();
+            String content = "dick.worker.name=" + data.getName();
             try {
-                Files.write(Paths.get(userHome + "/worker.properties"), dickWorkerName.getBytes("utf-8"), StandardOpenOption.CREATE);
+                Files.write(Paths.get(userHome + "/worker.properties"), content.getBytes("utf-8"), StandardOpenOption.CREATE);
+                dickWorkerName = data.getName();
             } catch (IOException ex) {
                 log.error("Creating property file with name failed!", ex);
                 throw Throwables.propagate(ex);
