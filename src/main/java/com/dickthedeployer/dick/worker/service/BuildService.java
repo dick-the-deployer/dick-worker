@@ -77,6 +77,7 @@ public class BuildService {
     }
 
     private String[] split(String command) {
+        log.info("Splitting command: {}", command);
         return ArgumentTokenizer.tokenize(command).toArray(new String[0]);
     }
 
