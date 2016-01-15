@@ -16,9 +16,6 @@
 package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.facade.DickWebClient;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +23,10 @@ import org.springframework.stereotype.Service;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  *

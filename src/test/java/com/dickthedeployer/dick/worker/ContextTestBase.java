@@ -16,16 +16,18 @@
 package com.dickthedeployer.dick.worker;
 
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
-import static java.util.Arrays.asList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.RunWith;
-import static org.mockito.Mockito.mock;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.List;
+
+import static java.util.Arrays.asList;
+import static org.mockito.Mockito.mock;
 
 /**
  *
@@ -66,7 +68,7 @@ public class ContextTestBase {
                     "cmd.exe /c ping 127.0.0.1 -n " + (timeout + 1) + " > nul",
                     "cmd.exe /c echo bar");
         } else {
-            return asList("echo $FOO",
+            return asList("bash -c \"echo $FOO\"",
                     "sleep " + timeout,
                     "echo bar");
         }

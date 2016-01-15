@@ -17,12 +17,7 @@ package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.facade.DickWebClient;
 import com.dickthedeployer.dick.worker.facade.model.BuildForm;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import com.dickthedeployer.dick.worker.util.ArgumentTokenizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +27,13 @@ import rx.Observable;
 import rx.Subscription;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -56,7 +58,7 @@ public class BuildService {
             Path temp = Files.createTempDirectory("build-" + buildId);
             return Observable.just(commands)
                     .concatMap(Observable::from)
-                    .map(command -> command.split(" "))
+                    .map(command -> split(command))
                     .concatMap(commandArray
                             -> commandService.invokeWithEnvironment(temp, environment, commandArray)
                     )
@@ -72,6 +74,10 @@ public class BuildService {
             processError(buildId, ex, buffer);
             return Subscriptions.empty();
         }
+    }
+
+    private String[] split(String command) {
+        return ArgumentTokenizer.tokenize(command).toArray(new String[0]);
     }
 
     private void onProgress(Long buildId, String logLines) {

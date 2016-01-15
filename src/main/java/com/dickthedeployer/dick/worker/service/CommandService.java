@@ -18,6 +18,12 @@ package com.dickthedeployer.dick.worker.service;
 import com.dickthedeployer.dick.worker.exception.ProcessExitedWithNotZeroException;
 import com.google.common.base.Throwables;
 import com.watchrabbit.commons.marker.Feature;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import rx.Observable;
+import rx.Subscriber;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -27,11 +33,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import rx.Observable;
-import rx.Subscriber;
 
 /**
  *
