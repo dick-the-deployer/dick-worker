@@ -16,26 +16,24 @@
 package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.ContextTestBase;
-import static com.dickthedeployer.dick.worker.ContextTestBase.isWindows;
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
 import com.dickthedeployer.dick.worker.facade.model.BuildForm;
 import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
-import static com.watchrabbit.commons.sleep.Sleep.sleep;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonMap;
-import java.util.concurrent.TimeUnit;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.TimeUnit;
+
+import static com.watchrabbit.commons.sleep.Sleep.sleep;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import org.mockito.Mockito;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import org.springframework.beans.factory.annotation.Autowired;
+import static org.mockito.Mockito.*;
 
 /**
  *
@@ -88,7 +86,8 @@ public class WorkerServiceTest extends ContextTestBase {
     @Test
     public void shouldBuildEvenIfDickWebReportSuccessFails() {
         when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
-        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportSuccess(eq(123L), any());
+        Mockito.doThrow(new RuntimeException()).doNothing()
+                .when(dickWebFacade).reportSuccess(eq(123L), any());
 
         workerService.performBuild(123L,
                 produceCommands(),
@@ -97,13 +96,14 @@ public class WorkerServiceTest extends ContextTestBase {
         sleep(7, TimeUnit.SECONDS);
 
         verify(dickWebFacade, times(2)).reportProgress(eq(123L), any());
-        verify(dickWebFacade, times(1)).reportSuccess(eq(123L), any());
+        verify(dickWebFacade, times(2)).reportSuccess(eq(123L), any());
         verify(dickWebFacade, times(2)).checkStatus(eq(123L));
     }
 
     @Test
     public void shouldBuildEvenIfDickWebReportFailureFails() {
-        Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportFailure(eq(123L), any());
+        Mockito.doThrow(new RuntimeException()).doNothing()
+                .when(dickWebFacade).reportFailure(eq(123L), any());
         when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
 
         workerService.performBuild(123L,
@@ -112,7 +112,7 @@ public class WorkerServiceTest extends ContextTestBase {
 
         sleep(10, TimeUnit.SECONDS);
 
-        verify(dickWebFacade, times(1)).reportFailure(eq(123L), any());
+        verify(dickWebFacade, times(2)).reportFailure(eq(123L), any());
         verify(dickWebFacade, times(1)).checkStatus(eq(123L));
     }
 

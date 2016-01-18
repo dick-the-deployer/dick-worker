@@ -20,10 +20,14 @@ import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
 import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
 import com.dickthedeployer.dick.worker.facade.model.RegistrationData;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  *
@@ -35,6 +39,21 @@ public class DickWebClient {
 
     @Autowired
     DickWebFacade dickWebFacade;
+
+    private static final Queue<Runnable> waiting = new ConcurrentLinkedQueue<>();
+
+    @Scheduled(fixedDelay = 2000)
+    public void processQueue() {
+        Runnable runnable = waiting.poll();
+        if (runnable != null) {
+            try {
+                runnable.run();
+            } catch (RuntimeException ex) {
+                log.error("Cannot process runnable, returning to the queue", ex);
+                waiting.add(runnable);
+            }
+        }
+    }
 
     @HystrixCommand(fallbackMethod = "logProgress")
     public void reportProgress(Long id, BuildForm form) {
@@ -70,11 +89,13 @@ public class DickWebClient {
     }
 
     public void logSuccess(Long id, BuildForm form) {
-        log.error("Cannot send success report to dick web, logging to console {}", form.getLog());
+        log.error("Cannot send success report to dick web, queuing");
+        waiting.add(() -> reportSuccess(id, form));
     }
 
     public void logFailure(Long id, BuildForm form) {
-        log.error("Cannot send failure report to dick web, logging to console {}", form.getLog());
+        log.error("Cannot send failure report to dick web, queuing");
+        waiting.add(() -> reportFailure(id, form));
     }
 
     public BuildStatus statusFallback(Long id) {
