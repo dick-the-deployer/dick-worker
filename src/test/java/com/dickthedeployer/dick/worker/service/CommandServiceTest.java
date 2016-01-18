@@ -15,14 +15,17 @@
  */
 package com.dickthedeployer.dick.worker.service;
 
-import static com.dickthedeployer.dick.worker.ContextTestBase.isWindows;
+import com.dickthedeployer.dick.worker.util.ArgumentTokenizer;
+import org.junit.Test;
+import rx.Observable;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static com.dickthedeployer.dick.worker.ContextTestBase.isWindows;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import org.junit.Test;
-import rx.Observable;
 
 /**
  *
@@ -54,4 +57,19 @@ public class CommandServiceTest {
         }
     }
 
+    @Test
+    public void shouldMonitorErrorStream() throws IOException {
+        commandService.maxDuration = 1000;
+
+        Path temp = Files.createTempDirectory("deployment");
+        StringBuilder stringBuffer = new StringBuilder();
+        if (!isWindows()) {
+            Observable.just("bash -c \"echo foo 1>&2\"")
+                    .flatMap(command ->
+                            commandService.invokeWithEnvironment(temp, emptyMap(), ArgumentTokenizer.tokenize(command).toArray(new String[0])))
+                    .subscribe(result -> stringBuffer.append(result));
+        }
+        assertThat(stringBuffer.toString()).isEqualTo("Executing command: [bash, -c, echo foo 1>&2]foo");
+
+    }
 }
