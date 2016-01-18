@@ -18,17 +18,18 @@ package com.dickthedeployer.dick.worker.service;
 import com.dickthedeployer.dick.worker.facade.DickWebClient;
 import com.dickthedeployer.dick.worker.facade.model.RegistrationData;
 import com.google.common.base.Throwables;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 /**
  *
@@ -67,7 +68,7 @@ public class SchedulerService {
     }
 
     @Scheduled(fixedRateString = "${dick.worker.peek.interval:3000}")
-    public void sheduleWork() {
+    public void scheduleWork() {
         if (!StringUtils.isEmpty(dickWorkerName)) {
             dickWebClient.peekBuild(dickWorkerName)
                     .ifPresent(order -> workerService.performBuild(order.getBuildId(), order.getCommands(), order.getEnvironment()));
