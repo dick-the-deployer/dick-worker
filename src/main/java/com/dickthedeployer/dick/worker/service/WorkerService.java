@@ -15,7 +15,10 @@
  */
 package com.dickthedeployer.dick.worker.service;
 
+import com.dickthedeployer.dick.worker.command.Command;
+import com.dickthedeployer.dick.worker.command.CommandChainFactory;
 import com.dickthedeployer.dick.worker.facade.DickWebClient;
+import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +28,6 @@ import rx.Subscriber;
 import rx.Subscription;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,27 +44,31 @@ public class WorkerService {
     @Autowired
     DickWebClient dickWebClient;
 
+    @Autowired
+    CommandChainFactory commandChainFactory;
+
     @Value("${dick.worker.status.interval:3}")
     long interval;
 
     @Value("${dick.worker.job.duration:86400}")
     long maxDuration;
 
-    public void performBuild(Long buildId, List<String> commands, Map<String, String> environment) {
-        Subscription deploymentSubscribtion = buildService.build(buildId, commands, environment);
+    public void performBuild(BuildOrder buildOrder) {
+        List<Command> commands = commandChainFactory.produceCommands(buildOrder);
+        Subscription deploymentSubscription = buildService.build(buildOrder.getBuildId(), commands);
         Observable.interval(interval, TimeUnit.SECONDS)
                 .take(maxDuration, TimeUnit.SECONDS)
-                .map(tick -> dickWebClient.checkStatus(buildId).isStopped())
-                .subscribe(new TimeoutAndCancellGuardingSubscriber(deploymentSubscribtion));
+                .map(tick -> dickWebClient.checkStatus(buildOrder.getBuildId()).isStopped())
+                .subscribe(new TimeoutAndCancelGuardingSubscriber(deploymentSubscription));
 
     }
 
-    private class TimeoutAndCancellGuardingSubscriber extends Subscriber<Boolean> {
+    private class TimeoutAndCancelGuardingSubscriber extends Subscriber<Boolean> {
 
-        private final Subscription deploymentSubscribtion;
+        private final Subscription deploymentSubscription;
 
-        public TimeoutAndCancellGuardingSubscriber(Subscription deploymentSubscribtion) {
-            this.deploymentSubscribtion = deploymentSubscribtion;
+        public TimeoutAndCancelGuardingSubscriber(Subscription deploymentSubscription) {
+            this.deploymentSubscription = deploymentSubscription;
         }
 
         @Override
@@ -79,7 +85,7 @@ public class WorkerService {
 
         @Override
         public void onNext(Boolean shouldStop) {
-            boolean unsubscribed = deploymentSubscribtion.isUnsubscribed();
+            boolean unsubscribed = deploymentSubscription.isUnsubscribed();
             log.debug("Checking if should stop: {} or is finished: {}", shouldStop, unsubscribed);
             if (shouldStop || unsubscribed) {
                 unsubscribeFromObservables();
@@ -87,7 +93,7 @@ public class WorkerService {
         }
 
         private void unsubscribeFromObservables() {
-            deploymentSubscribtion.unsubscribe();
+            deploymentSubscription.unsubscribe();
             unsubscribe();
         }
     }

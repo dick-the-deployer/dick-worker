@@ -15,9 +15,9 @@
  */
 package com.dickthedeployer.dick.worker.service;
 
+import com.dickthedeployer.dick.worker.command.Command;
 import com.dickthedeployer.dick.worker.facade.DickWebClient;
 import com.dickthedeployer.dick.worker.facade.model.BuildForm;
-import com.dickthedeployer.dick.worker.util.ArgumentTokenizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,17 +26,11 @@ import org.springframework.util.StringUtils;
 import rx.Observable;
 import rx.Subscription;
 import rx.schedulers.Schedulers;
-import rx.subscriptions.Subscriptions;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
  * @author mariusz
  */
 @Slf4j
@@ -52,33 +46,20 @@ public class BuildService {
     @Value("${dick.worker.report.timespan:2}")
     long timespan;
 
-    public Subscription build(Long buildId, List<String> commands, Map<String, String> environment) {
+    public Subscription build(Long buildId, List<Command> commands) {
         StringBuffer buffer = new StringBuffer();
-        try {
-            Path temp = Files.createTempDirectory("build-" + buildId);
-            return Observable.just(commands)
-                    .concatMap(Observable::from)
-                    .map(command -> split(command))
-                    .concatMap(commandArray
-                            -> commandService.invokeWithEnvironment(temp, environment, commandArray)
-                    )
-                    .doOnNext(logLine -> buffer.append(logLine).append("\n"))
-                    .buffer(timespan, TimeUnit.SECONDS)
-                    .filter(logLines -> !logLines.isEmpty())
-                    .map(logLines -> StringUtils.collectionToDelimitedString(logLines, "\n"))
-                    .subscribeOn(Schedulers.newThread())
-                    .subscribe(logLines -> onProgress(buildId, logLines),
-                            ex -> processError(buildId, ex, buffer),
-                            () -> completeDeployment(buildId, buffer));
-        } catch (IOException ex) {
-            processError(buildId, ex, buffer);
-            return Subscriptions.empty();
-        }
-    }
 
-    private String[] split(String command) {
-        log.info("Splitting command: {}", command);
-        return ArgumentTokenizer.tokenize(command).toArray(new String[0]);
+        return Observable.just(commands)
+                .concatMap(Observable::from)
+                .concatMap(command -> command.invoke())
+                .doOnNext(logLine -> buffer.append(logLine).append("\n"))
+                .buffer(timespan, TimeUnit.SECONDS)
+                .filter(logLines -> !logLines.isEmpty())
+                .map(logLines -> StringUtils.collectionToDelimitedString(logLines, "\n"))
+                .subscribeOn(Schedulers.newThread())
+                .subscribe(logLines -> onProgress(buildId, logLines),
+                        ex -> processError(buildId, ex, buffer),
+                        () -> completeDeployment(buildId, buffer));
     }
 
     private void onProgress(Long buildId, String logLines) {

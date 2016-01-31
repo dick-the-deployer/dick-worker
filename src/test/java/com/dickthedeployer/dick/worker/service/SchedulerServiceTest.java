@@ -20,18 +20,17 @@ import com.dickthedeployer.dick.worker.facade.DickWebFacade;
 import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
 import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
 import com.dickthedeployer.dick.worker.facade.model.RegistrationData;
-import static com.watchrabbit.commons.sleep.Sleep.sleep;
-import static java.util.Collections.singletonMap;
-import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.TimeUnit;
+
+import static com.watchrabbit.commons.sleep.Sleep.sleep;
+import static java.util.Collections.singletonMap;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import org.springframework.beans.factory.annotation.Autowired;
+import static org.mockito.Mockito.*;
 
 /**
  *
@@ -63,8 +62,12 @@ public class SchedulerServiceTest extends ContextTestBase {
     public void shouldPeekFromWebAndBuild() {
         when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
         when(dickWebFacade.peekBuild(eq("test-build-dude")))
-                .thenReturn(new BuildOrder(123L, produceCommands(), singletonMap("FOO", "foo")))
-                .thenReturn(null);
+                .thenReturn(BuildOrder.builder()
+                        .commands(produceCommands())
+                        .buildId(123L)
+                        .environment(singletonMap("FOO", "foo"))
+                        .build()
+                ).thenReturn(null);
 
         sleep(10, TimeUnit.SECONDS);
 

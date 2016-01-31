@@ -16,22 +16,24 @@
 package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.ContextTestBase;
+import com.dickthedeployer.dick.worker.command.CommandChainFactory;
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
 import com.dickthedeployer.dick.worker.facade.model.BuildForm;
-import static com.watchrabbit.commons.sleep.Sleep.sleep;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonMap;
-import java.util.concurrent.TimeUnit;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.TimeUnit;
+
+import static com.watchrabbit.commons.sleep.Sleep.sleep;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import org.springframework.beans.factory.annotation.Autowired;
+import static org.mockito.Mockito.*;
 
 /**
  * @author mariusz
@@ -44,6 +46,9 @@ public class BuildServiceTest extends ContextTestBase {
     @Autowired
     DickWebFacade dickWebFacade;
 
+    @Autowired
+    CommandChainFactory commandChainFactory;
+
     @Before
     public void prepare() {
         reset(dickWebFacade);
@@ -51,9 +56,10 @@ public class BuildServiceTest extends ContextTestBase {
 
     @Test
     public void shouldBuildSucessfully() {
-        buildService.build(123L,
-                produceCommands(),
-                singletonMap("FOO", "foo"));
+        buildService.build(123L, commandChainFactory.produceCommands(BuildOrder.builder()
+                .environment(singletonMap("FOO", "foo"))
+                .commands(produceCommands())
+                .build()));
 
         sleep(6, TimeUnit.SECONDS);
 
@@ -78,9 +84,10 @@ public class BuildServiceTest extends ContextTestBase {
 
     @Test
     public void shouldReportError() {
-        buildService.build(123L,
-                produceErrorCommands(),
-                emptyMap());
+        buildService.build(123L, commandChainFactory.produceCommands(BuildOrder.builder()
+                .environment(emptyMap())
+                .commands(produceErrorCommands())
+                .build()));
 
         sleep(2, TimeUnit.SECONDS);
 
