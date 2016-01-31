@@ -18,6 +18,7 @@ package com.dickthedeployer.dick.worker.service;
 import com.dickthedeployer.dick.worker.ContextTestBase;
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
 import com.dickthedeployer.dick.worker.facade.model.BuildForm;
+import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
 import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,9 +57,12 @@ public class WorkerServiceTest extends ContextTestBase {
     public void shouldBuildEvenIfDickWebCheckStatusFails() {
         when(dickWebFacade.checkStatus(eq(123L))).thenThrow(new RuntimeException());
 
-        workerService.performBuild(123L,
-                produceCommands(),
-                singletonMap("FOO", "foo"));
+        workerService.performBuild(BuildOrder.builder()
+                .buildId(123L)
+                .environment(singletonMap("FOO", "foo"))
+                .commands(produceCommands())
+                .build()
+        );
 
         sleep(7, TimeUnit.SECONDS);
 
@@ -72,9 +76,12 @@ public class WorkerServiceTest extends ContextTestBase {
         when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
         Mockito.doThrow(new RuntimeException()).when(dickWebFacade).reportProgress(eq(123L), any());
 
-        workerService.performBuild(123L,
-                produceCommands(),
-                singletonMap("FOO", "foo"));
+        workerService.performBuild(BuildOrder.builder()
+                .buildId(123L)
+                .environment(singletonMap("FOO", "foo"))
+                .commands(produceCommands())
+                .build()
+        );
 
         sleep(7, TimeUnit.SECONDS);
 
@@ -89,9 +96,12 @@ public class WorkerServiceTest extends ContextTestBase {
         Mockito.doThrow(new RuntimeException()).doNothing()
                 .when(dickWebFacade).reportSuccess(eq(123L), any());
 
-        workerService.performBuild(123L,
-                produceCommands(),
-                singletonMap("FOO", "foo"));
+        workerService.performBuild(BuildOrder.builder()
+                .buildId(123L)
+                .environment(singletonMap("FOO", "foo"))
+                .commands(produceCommands())
+                .build()
+        );
 
         sleep(7, TimeUnit.SECONDS);
 
@@ -106,9 +116,12 @@ public class WorkerServiceTest extends ContextTestBase {
                 .when(dickWebFacade).reportFailure(eq(123L), any());
         when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
 
-        workerService.performBuild(123L,
-                produceErrorCommands(),
-                emptyMap());
+        workerService.performBuild(BuildOrder.builder()
+                .buildId(123L)
+                .environment(emptyMap())
+                .commands(produceErrorCommands())
+                .build()
+        );
 
         sleep(10, TimeUnit.SECONDS);
 
@@ -117,12 +130,15 @@ public class WorkerServiceTest extends ContextTestBase {
     }
 
     @Test
-    public void shouldBuildSucessfullyCheckingIfShouldStop() {
+    public void shouldBuildSuccessfullyCheckingIfShouldStop() {
         when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
 
-        workerService.performBuild(123L,
-                produceCommands(),
-                singletonMap("FOO", "foo"));
+        workerService.performBuild(BuildOrder.builder()
+                .buildId(123L)
+                .environment(singletonMap("FOO", "foo"))
+                .commands(produceCommands())
+                .build()
+        );
 
         sleep(10, TimeUnit.SECONDS);
 
@@ -134,9 +150,13 @@ public class WorkerServiceTest extends ContextTestBase {
     @Test
     public void shouldReportErrorCheckingIfShouldStop() {
         when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
-        workerService.performBuild(123L,
-                produceErrorCommands(),
-                emptyMap());
+
+        workerService.performBuild(BuildOrder.builder()
+                .buildId(123L)
+                .environment(emptyMap())
+                .commands(produceErrorCommands())
+                .build()
+        );
 
         sleep(10, TimeUnit.SECONDS);
 
@@ -147,9 +167,13 @@ public class WorkerServiceTest extends ContextTestBase {
     @Test
     public void shouldStopBuildOnSignalFromWeb() {
         when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus(true));
-        workerService.performBuild(123L,
-                produceCommands(),
-                emptyMap());
+
+        workerService.performBuild(BuildOrder.builder()
+                .buildId(123L)
+                .environment(emptyMap())
+                .commands(produceCommands())
+                .build()
+        );
 
         sleep(10, TimeUnit.SECONDS);
 
@@ -170,9 +194,12 @@ public class WorkerServiceTest extends ContextTestBase {
     @Test
     public void shouldStopBuildOnTimeout() {
         when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
-        workerService.performBuild(123L,
-                produceCommandsWithTimeout(100),
-                emptyMap());
+        workerService.performBuild(BuildOrder.builder()
+                .buildId(123L)
+                .environment(emptyMap())
+                .commands(produceCommandsWithTimeout(100))
+                .build()
+        );
 
         sleep(15, TimeUnit.SECONDS);
 

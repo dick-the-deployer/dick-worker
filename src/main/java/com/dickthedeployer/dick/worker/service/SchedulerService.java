@@ -71,7 +71,7 @@ public class SchedulerService {
     public void scheduleWork() {
         if (!StringUtils.isEmpty(dickWorkerName)) {
             dickWebClient.peekBuild(dickWorkerName)
-                    .ifPresent(order -> workerService.performBuild(order.getBuildId(), order.getCommands(), order.getEnvironment()));
+                    .ifPresent(order -> workerService.performBuild(order));
         }
     }
 }
