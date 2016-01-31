@@ -17,6 +17,7 @@ public class CommandChainFactoryTest extends ContextTestBase {
     @Test
     public void shouldCreateCheckoutCommand() {
         List<Command> commands = commandChainFactory.produceCommands(BuildOrder.builder()
+                .requireRepository(true)
                 .build());
 
         assertThat(commands).hasSize(2);
