@@ -43,7 +43,7 @@ import java.util.concurrent.TimeoutException;
 public class CommandService {
 
     @Value("${dick.worker.job.duration:86400}")
-    long maxDuration;
+    long maxDuration = 86400;
 
     public Observable<String> invokeWithEnvironment(Path workingDir, Map<String, String> environment, String... command) throws RuntimeException {
         return Observable.create((Subscriber<? super String> observer) -> {

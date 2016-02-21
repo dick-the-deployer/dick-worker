@@ -1,6 +1,6 @@
 dick.web:
   token: secure-token
   url: http://localhost:8080
-
+dick.worker.runner: docker
 server:
   port: 9011
