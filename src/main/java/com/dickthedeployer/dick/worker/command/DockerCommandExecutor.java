@@ -1,5 +1,6 @@
 package com.dickthedeployer.dick.worker.command;
 
+import com.dickthedeployer.dick.worker.facade.model.EnvironmentVariable;
 import com.dickthedeployer.dick.worker.service.CommandService;
 import com.dickthedeployer.dick.worker.util.ArgumentTokenizer;
 import com.google.common.base.Throwables;
@@ -19,7 +20,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -33,13 +33,15 @@ public class DockerCommandExecutor implements Command {
     private String runner;
     private String image;
     private String additionalDockerParams;
-    private Map<String, String> environment;
+    private List<EnvironmentVariable> environment;
 
     @Override
     public Observable<String> invoke() {
         createScript();
         String command = buildCommand();
-        return commandService.invokeWithEnvironment(location, environment, split(command));
+        boolean isAnySecure = environment.stream()
+                .anyMatch(EnvironmentVariable::isSecure);
+        return commandService.invokeWithEnvironment(location, environment, isAnySecure, split(command));
     }
 
     private String buildCommand() {
@@ -54,8 +56,8 @@ public class DockerCommandExecutor implements Command {
     }
 
     private String getEnvironment() {
-        return this.environment.entrySet().stream()
-                .map(entry -> entry.getKey() + "=" + entry.getValue())
+        return this.environment.stream()
+                .map(entry -> entry.getName() + "=" + entry.getValue())
                 .map(variable -> "-e " + variable)
                 .reduce("", (first, second) -> first + second + " ");
     }

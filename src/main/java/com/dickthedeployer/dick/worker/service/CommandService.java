@@ -16,6 +16,7 @@
 package com.dickthedeployer.dick.worker.service;
 
 import com.dickthedeployer.dick.worker.exception.ProcessExitedWithNotZeroException;
+import com.dickthedeployer.dick.worker.facade.model.EnvironmentVariable;
 import com.google.common.base.Throwables;
 import com.watchrabbit.commons.marker.Feature;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import rx.Subscriber;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
@@ -34,8 +36,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static java.util.stream.Collectors.toMap;
+
 /**
- *
  * @author mariusz
  */
 @Slf4j
@@ -45,23 +48,19 @@ public class CommandService {
     @Value("${dick.worker.job.duration:86400}")
     long maxDuration = 86400;
 
-    public Observable<String> invokeWithEnvironment(Path workingDir, Map<String, String> environment, String... command) throws RuntimeException {
+    public Observable<String> invokeWithEnvironment(Path workingDir, List<EnvironmentVariable> environment, boolean isSecure, String... command) throws RuntimeException {
         return Observable.create((Subscriber<? super String> observer) -> {
             try {
-                log.info("Executing command {} in path {}", Arrays.toString(command), workingDir.toString());
-                observer.onNext(
-                        new StringBuilder().append("Executing command: ").append(Arrays.toString(command)).toString()
-                );
+
+                emmitCommand(workingDir, observer, command, isSecure);
 
                 ProcessBuilder builder = new ProcessBuilder(command);
                 builder.directory(workingDir.toFile());
                 builder.redirectErrorStream(true);
-                environment.forEach((key, value)
-                        -> observer.onNext(
-                                new StringBuilder().append("Setting environment variable: ").append(key).append("=").append(value).toString()
-                        )
-                );
-                builder.environment().putAll(environment);
+                emmitEnvironment(environment, observer);
+                Map<String, String> collectedEnvironment = environment.stream()
+                        .collect(toMap(EnvironmentVariable::getName, EnvironmentVariable::getValue));
+                builder.environment().putAll(collectedEnvironment);
                 Process process = builder.start();
                 try {
                     Executors.newSingleThreadExecutor().submit(() -> {
@@ -75,6 +74,38 @@ public class CommandService {
                 observer.onError(e);
             }
         });
+    }
+
+    private void emmitCommand(Path workingDir, Subscriber<? super String> observer, String[] command, boolean isSecure) {
+        if (isSecure) {
+            log.info("Executing command in path {}", workingDir.toString());
+            observer.onNext("Executing command.");
+        } else {
+            log.info("Executing command {} in path {}", Arrays.toString(command), workingDir.toString());
+            observer.onNext(
+                    new StringBuilder().append("Executing command: ").append(Arrays.toString(command)).toString()
+            );
+        }
+    }
+
+    private void emmitEnvironment(List<EnvironmentVariable> environment, Subscriber<? super String> observer) {
+        for (EnvironmentVariable variable : environment) {
+            if (variable.isSecure()) {
+                observer.onNext(
+                        new StringBuilder().append("Setting environment variable: ")
+                                .append(variable.getName())
+                                .append("=")
+                                .append("***********************").toString()
+                );
+            } else {
+                observer.onNext(
+                        new StringBuilder().append("Setting environment variable: ")
+                                .append(variable.getName())
+                                .append("=")
+                                .append(variable.getValue()).toString()
+                );
+            }
+        }
     }
 
     @Feature("Here is possible thread/memory leak, when reading output from process that never ends thread working on this method will be blocked also")

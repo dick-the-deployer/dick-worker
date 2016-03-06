@@ -20,6 +20,7 @@ import com.dickthedeployer.dick.worker.command.CommandChainFactory;
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
 import com.dickthedeployer.dick.worker.facade.model.BuildForm;
 import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
+import com.dickthedeployer.dick.worker.facade.model.EnvironmentVariable;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -28,8 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.concurrent.TimeUnit;
 
 import static com.watchrabbit.commons.sleep.Sleep.sleep;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonMap;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -57,7 +58,12 @@ public class BuildServiceTest extends ContextTestBase {
     @Test
     public void shouldBuildSucessfully() {
         buildService.build(123L, commandChainFactory.produceCommands(BuildOrder.builder()
-                .environment(singletonMap("FOO", "foo"))
+                .environment(singletonList(
+                        EnvironmentVariable.builder()
+                                .name("FOO")
+                                .value("foo")
+                                .build()
+                ))
                 .commands(produceCommands())
                 .build()));
 
@@ -71,13 +77,13 @@ public class BuildServiceTest extends ContextTestBase {
         if (isWindows()) {
             assertThat(captor.getValue().getLog()).isEqualTo(
                     "Executing command: [cmd.exe, /c, echo, %FOO%]\n"
-                    + "Setting environment variable: FOO=foo\n"
-                    + "foo\n"
-                    + "Executing command: [cmd.exe, /c, ping, 127.0.0.1, -n, 4, >, nul]\n"
-                    + "Setting environment variable: FOO=foo\n"
-                    + "Executing command: [cmd.exe, /c, echo, bar]\n"
-                    + "Setting environment variable: FOO=foo\n"
-                    + "bar\n"
+                            + "Setting environment variable: FOO=foo\n"
+                            + "foo\n"
+                            + "Executing command: [cmd.exe, /c, ping, 127.0.0.1, -n, 4, >, nul]\n"
+                            + "Setting environment variable: FOO=foo\n"
+                            + "Executing command: [cmd.exe, /c, echo, bar]\n"
+                            + "Setting environment variable: FOO=foo\n"
+                            + "bar\n"
             );
         }
     }
@@ -85,7 +91,7 @@ public class BuildServiceTest extends ContextTestBase {
     @Test
     public void shouldReportError() {
         buildService.build(123L, commandChainFactory.produceCommands(BuildOrder.builder()
-                .environment(emptyMap())
+                .environment(emptyList())
                 .commands(produceErrorCommands())
                 .build()));
 
@@ -98,12 +104,12 @@ public class BuildServiceTest extends ContextTestBase {
         if (isWindows()) {
             assertThat(captor.getValue().getLog()).isEqualTo(
                     "Executing command: [cmd.exe, /c, return, 1]\n"
-                    + "'return' is not recognized as an internal or external command,\n"
-                    + "operable program or batch file.\n"
-                    + "\n"
-                    + "Command exited with non-zero: 1\n"
-                    + "\n"
-                    + ""
+                            + "'return' is not recognized as an internal or external command,\n"
+                            + "operable program or batch file.\n"
+                            + "\n"
+                            + "Command exited with non-zero: 1\n"
+                            + "\n"
+                            + ""
             );
         }
     }

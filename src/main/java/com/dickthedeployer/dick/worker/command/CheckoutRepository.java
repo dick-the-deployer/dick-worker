@@ -28,7 +28,7 @@ public class CheckoutRepository implements Command {
                                 "git checkout " + sha)
                 ).commandService(commandService)
                 .location(location)
-                .environment(Collections.emptyMap())
+                .environment(Collections.emptyList())
                 .build()
                 .invoke();
     }

@@ -20,6 +20,7 @@ import com.dickthedeployer.dick.worker.facade.DickWebFacade;
 import com.dickthedeployer.dick.worker.facade.model.BuildForm;
 import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
 import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
+import com.dickthedeployer.dick.worker.facade.model.EnvironmentVariable;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -29,15 +30,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.concurrent.TimeUnit;
 
 import static com.watchrabbit.commons.sleep.Sleep.sleep;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonMap;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
- *
  * @author mariusz
  */
 public class WorkerServiceTest extends ContextTestBase {
@@ -59,7 +59,12 @@ public class WorkerServiceTest extends ContextTestBase {
 
         workerService.performBuild(BuildOrder.builder()
                 .buildId(123L)
-                .environment(singletonMap("FOO", "foo"))
+                .environment(singletonList(
+                        EnvironmentVariable.builder()
+                                .name("FOO")
+                                .value("foo")
+                                .build()
+                ))
                 .commands(produceCommands())
                 .build()
         );
@@ -78,7 +83,12 @@ public class WorkerServiceTest extends ContextTestBase {
 
         workerService.performBuild(BuildOrder.builder()
                 .buildId(123L)
-                .environment(singletonMap("FOO", "foo"))
+                .environment(singletonList(
+                        EnvironmentVariable.builder()
+                                .name("FOO")
+                                .value("foo")
+                                .build()
+                ))
                 .commands(produceCommands())
                 .build()
         );
@@ -98,7 +108,12 @@ public class WorkerServiceTest extends ContextTestBase {
 
         workerService.performBuild(BuildOrder.builder()
                 .buildId(123L)
-                .environment(singletonMap("FOO", "foo"))
+                .environment(singletonList(
+                        EnvironmentVariable.builder()
+                                .name("FOO")
+                                .value("foo")
+                                .build()
+                ))
                 .commands(produceCommands())
                 .build()
         );
@@ -118,7 +133,7 @@ public class WorkerServiceTest extends ContextTestBase {
 
         workerService.performBuild(BuildOrder.builder()
                 .buildId(123L)
-                .environment(emptyMap())
+                .environment(emptyList())
                 .commands(produceErrorCommands())
                 .build()
         );
@@ -135,7 +150,12 @@ public class WorkerServiceTest extends ContextTestBase {
 
         workerService.performBuild(BuildOrder.builder()
                 .buildId(123L)
-                .environment(singletonMap("FOO", "foo"))
+                .environment(singletonList(
+                        EnvironmentVariable.builder()
+                                .name("FOO")
+                                .value("foo")
+                                .build()
+                ))
                 .commands(produceCommands())
                 .build()
         );
@@ -153,7 +173,7 @@ public class WorkerServiceTest extends ContextTestBase {
 
         workerService.performBuild(BuildOrder.builder()
                 .buildId(123L)
-                .environment(emptyMap())
+                .environment(emptyList())
                 .commands(produceErrorCommands())
                 .build()
         );
@@ -170,7 +190,7 @@ public class WorkerServiceTest extends ContextTestBase {
 
         workerService.performBuild(BuildOrder.builder()
                 .buildId(123L)
-                .environment(emptyMap())
+                .environment(emptyList())
                 .commands(produceCommands())
                 .build()
         );
@@ -185,8 +205,8 @@ public class WorkerServiceTest extends ContextTestBase {
         if (isWindows()) {
             assertThat(captor.getValue().getLog()).isEqualTo(
                     "Executing command: [cmd.exe, /c, echo, %FOO%]\n"
-                    + "%FOO%\n"
-                    + "Executing command: [cmd.exe, /c, ping, 127.0.0.1, -n, 4, >, nul]\n"
+                            + "%FOO%\n"
+                            + "Executing command: [cmd.exe, /c, ping, 127.0.0.1, -n, 4, >, nul]\n"
             );
         }
     }
@@ -196,7 +216,7 @@ public class WorkerServiceTest extends ContextTestBase {
         when(dickWebFacade.checkStatus(eq(123L))).thenReturn(new BuildStatus());
         workerService.performBuild(BuildOrder.builder()
                 .buildId(123L)
-                .environment(emptyMap())
+                .environment(emptyList())
                 .commands(produceCommandsWithTimeout(100))
                 .build()
         );

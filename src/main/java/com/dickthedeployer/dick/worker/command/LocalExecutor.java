@@ -1,5 +1,6 @@
 package com.dickthedeployer.dick.worker.command;
 
+import com.dickthedeployer.dick.worker.facade.model.EnvironmentVariable;
 import com.dickthedeployer.dick.worker.service.CommandService;
 import com.dickthedeployer.dick.worker.util.ArgumentTokenizer;
 import lombok.Builder;
@@ -8,7 +9,6 @@ import rx.Observable;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Builder
@@ -17,7 +17,7 @@ public class LocalExecutor implements Command {
     private CommandService commandService;
     private Path location;
     private List<String> commands;
-    private Map<String, String> environment;
+    private List<EnvironmentVariable> environment;
 
     @Override
     public Observable<String> invoke() {
@@ -25,7 +25,7 @@ public class LocalExecutor implements Command {
                 .concatMap(Observable::from)
                 .map(command -> split(command))
                 .concatMap(commandArray
-                        -> commandService.invokeWithEnvironment(location, environment, commandArray)
+                        -> commandService.invokeWithEnvironment(location, environment, false, commandArray)
                 );
     }
 
