@@ -79,7 +79,7 @@ public class DockerCommandExecutor implements Command {
                 PosixFilePermissions.asFileAttribute(perms);
 
         byte data[] = commands.stream()
-                .reduce("", (first, second) -> first + "echo \"Executing" + second + "\"\n" + second + "\n")
+                .reduce("", (first, second) -> first + "echo \"Executing " + second + "\"\n" + second + "\n")
                 .getBytes();
         ByteBuffer bb = ByteBuffer.wrap(data);
 
