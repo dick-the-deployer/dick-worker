@@ -19,6 +19,7 @@ import com.dickthedeployer.dick.worker.ContextTestBase;
 import com.dickthedeployer.dick.worker.facade.DickWebFacade;
 import com.dickthedeployer.dick.worker.facade.model.BuildOrder;
 import com.dickthedeployer.dick.worker.facade.model.BuildStatus;
+import com.dickthedeployer.dick.worker.facade.model.EnvironmentVariable;
 import com.dickthedeployer.dick.worker.facade.model.RegistrationData;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,13 +28,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.concurrent.TimeUnit;
 
 import static com.watchrabbit.commons.sleep.Sleep.sleep;
-import static java.util.Collections.singletonMap;
+import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
- *
  * @author mariusz
  */
 public class SchedulerServiceTest extends ContextTestBase {
@@ -65,7 +65,12 @@ public class SchedulerServiceTest extends ContextTestBase {
                 .thenReturn(BuildOrder.builder()
                         .commands(produceCommands())
                         .buildId(123L)
-                        .environment(singletonMap("FOO", "foo"))
+                        .environment(singletonList(
+                                EnvironmentVariable.builder()
+                                        .name("FOO")
+                                        .value("foo")
+                                        .build()
+                        ))
                         .build()
                 ).thenReturn(null);
 

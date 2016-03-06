@@ -24,11 +24,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static com.dickthedeployer.dick.worker.ContextTestBase.isWindows;
-import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
- *
  * @author mariusz
  */
 public class CommandServiceTest {
@@ -44,13 +43,13 @@ public class CommandServiceTest {
 
         if (isWindows()) {
             Observable.just("cmd.exe /c echo foo", "cmd.exe /c echo bar", "cmd.exe /c echo foo2")
-                    .flatMap(command -> commandService.invokeWithEnvironment(temp, emptyMap(), command.split(" ")))
+                    .flatMap(command -> commandService.invokeWithEnvironment(temp, emptyList(), false, command.split(" ")))
                     .subscribe(result -> stringBuffer.append(result));
 
             assertThat(stringBuffer.toString()).isEqualTo("Executing command: [cmd.exe, /c, echo, foo]fooExecuting command: [cmd.exe, /c, echo, bar]barExecuting command: [cmd.exe, /c, echo, foo2]foo2");
         } else {
             Observable.just("echo foo", "echo bar", "echo foo2")
-                    .flatMap(command -> commandService.invokeWithEnvironment(temp, emptyMap(), command.split(" ")))
+                    .flatMap(command -> commandService.invokeWithEnvironment(temp, emptyList(), false, command.split(" ")))
                     .subscribe(result -> stringBuffer.append(result));
 
             assertThat(stringBuffer.toString()).isEqualTo("Executing command: [echo, foo]fooExecuting command: [echo, bar]barExecuting command: [echo, foo2]foo2");
@@ -66,7 +65,7 @@ public class CommandServiceTest {
         if (!isWindows()) {
             Observable.just("bash -c \"echo foo 1>&2\"")
                     .flatMap(command ->
-                            commandService.invokeWithEnvironment(temp, emptyMap(), ArgumentTokenizer.tokenize(command).toArray(new String[0])))
+                            commandService.invokeWithEnvironment(temp, emptyList(), false, ArgumentTokenizer.tokenize(command).toArray(new String[0])))
                     .subscribe(result -> stringBuffer.append(result));
         }
         assertThat(stringBuffer.toString()).isEqualTo("Executing command: [bash, -c, echo foo 1>&2]foo");
