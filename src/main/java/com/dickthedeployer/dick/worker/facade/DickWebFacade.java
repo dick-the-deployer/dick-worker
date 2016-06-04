@@ -27,27 +27,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
- *
  * @author mariusz
  */
 @FeignClient(url = "${dick.web.url}")
 public interface DickWebFacade {
 
-    @RequestMapping(value = "/api/job-builds/{id}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/api/internal/job/{id}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     void reportProgress(@PathVariable("id") Long id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/api/job-builds/{id}/status", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/api/internal/job/{id}/status", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     BuildStatus checkStatus(@PathVariable("id") Long id);
 
-    @RequestMapping(value = "/api/job-builds/{id}/failure", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/api/internal/job/{id}/failure", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     void reportFailure(@PathVariable("id") Long id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/api/job-builds/{id}/success", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/api/internal/job/{id}/success", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     void reportSuccess(@PathVariable("id") Long id, @RequestBody BuildForm form);
 
-    @RequestMapping(value = "/api/job-builds/peek/{dickWorkerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/api/internal/job/peek/{dickWorkerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     BuildOrder peekBuild(@PathVariable("dickWorkerName") String dickWorkerName);
 
-    @RequestMapping(value = "/api/workers/register", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/api/internal/register", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     RegistrationData register();
 }

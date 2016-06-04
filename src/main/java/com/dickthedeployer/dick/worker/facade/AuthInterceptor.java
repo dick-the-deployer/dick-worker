@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- *
  * @author mariusz
  */
 @Component
@@ -32,7 +31,7 @@ public class AuthInterceptor implements RequestInterceptor {
 
     @Override
     public void apply(RequestTemplate template) {
-        template.header("X-Authorization", authorizationToken);
+        template.header("Authorization", "Basic " + authorizationToken);
     }
 
 }
