@@ -1,5 +1,5 @@
 dick.web:
-  token: secure-token
+  token: d29ya2VyOnBhc3N3b3Jk
   url: http://localhost:8080
 dick.worker.runner: docker
 server:
